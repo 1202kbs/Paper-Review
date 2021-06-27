@@ -1,0 +1,312 @@
+\documentclass[10pt]{article}
+
+\usepackage{mathtools}
+\usepackage{fullpage}
+\usepackage{latexsym}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{mathrsfs}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{bm}
+
+\newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\EE}{\mathbb{E}}
+
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KK}{\mathcal{K}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\NN}{\mathcal{N}}
+\newcommand{\OO}{\mathcal{O}}
+
+\newcommand{\KL}{D_{\text{KL}}}
+
+\newcommand{\data}{\texttt{data}}
+
+\DeclareMathOperator{\SL}{SL}
+\DeclareMathOperator{\re}{Re}
+\DeclareMathOperator{\im}{Im}
+\DeclareMathOperator{\diam}{diam}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\title{Training Products of Experts by Minimizing Contrastive Divergence}
+\author{Geoffrey E. Hinton}
+\date{August 1, 2002}
+
+
+\begin{document}
+
+\textbf{Paper Information.}
+
+\begin{itemize}
+\item Geoffrey E. Hinton. Training Products of Experts by Minimizing Contrastive Divergence. \underline{Neural Computation}, 14(8):1771--1800, 2002.
+\item $5000+$ citations.
+\item Approximately $500+$ citations per year, since 2015.
+\end{itemize}
+
+\section{Introduction}
+
+\begin{itemize}
+\item One way of modeling a complicated, high dimensional data distribution is to combine a large number of relatively simple probabilistic models.
+\item Gaussian Mixture Model with EM or gradient ascent.
+\begin{align*}
+p(\mathbf{d} \mid \{\pi_k, \bm{\mu}_k, \mathbf{\Sigma}_k\}_{k = 1}^K) = \sum_{k = 1}^K \pi_k \NN(\mathbf{d} \mid \bm{\mu}_k, \mathbf{\Sigma}_k), \qquad \sum_{k = 1}^K \pi_k = 1, \qquad \pi_k \geq 0.
+\end{align*}
+\item This paper proposes the Product of Experts (PoE) model. Multiplying simple models and renormalizing
+\begin{align*}
+p(\mathbf{d} \mid \{\theta_k\}_{k = 1}^K) = \frac{\prod_k p_k(\mathbf{d} \mid \theta_k)}{\sum_\mathbf{c} \prod_k p_k(\mathbf{c} \mid \theta_k)}
+\end{align*}
+where $\mathbf{c}$ indexes all possible vectors in the data space. For continuous spaces, the sum is replaced by an integral.
+\item Each expert $p_k(\mathbf{d} \mid \theta_k)$ can constrain a different subset of the dimension in a high-dimensional space and their product will then constraint all of the dimensions.
+\item For modeling handwritten digits, one low-resolution model can generate images that have the approximate overall shape of the digit and other more local models can ensure that small image patches contain segments of stroke with the correct fine structure.
+\item On the other hand, for mixture models, each model must know how to produce an entire digit.
+\item Applications from training Boltzmann Machines to training deep energy based models.
+\end{itemize}
+
+\newpage
+
+\section{Learning PoE by Maximizing Likelihood}
+
+\begin{itemize}
+\item Recall that we defined PoE by
+\begin{align}
+p(\mathbf{d} \mid \{\theta_k\}_{k = 1}^K) = \frac{\prod_k p_k(\mathbf{d} \mid \theta_k)}{\sum_\mathbf{c} \prod_k p_k(\mathbf{c} \mid \theta_k)} \label{eq:1}
+\end{align}
+where $\mathbf{c}$ indexes all possible vectors in the data space.
+\item The obvious way to fit a PoE to a set of observed i.i.d. vectors is to perform gradient ascent on the log likelihood of each observed vector, $\mathbf{d}$, under the PoE. This is given by
+\begin{align}
+\frac{\partial}{\partial \theta_n} \log p(\mathbf{d} \mid \{\theta_k\}_{k = 1}^K) &= \frac{\partial}{\partial \theta_n} \log\left( \frac{\prod_k p_k(\mathbf{d} \mid \theta_k)}{\sum_\mathbf{c} \prod_k p_k(\mathbf{c} \mid \theta_k)} \right) \nonumber \\
+&= \frac{\partial}{\partial \theta_n} \sum_k \log p_k(\mathbf{d} \mid \theta_k) - \frac{\partial}{\partial \theta_n} \log\left( \sum_\mathbf{c} \prod_k p_k(\mathbf{c} \mid \theta_k) \right) \nonumber \\
+&= \frac{\partial}{\partial \theta_n} \log p_n(\mathbf{d} \mid \theta_n) - \sum_\mathbf{c} \frac{\prod_{k \neq n} p_k(\mathbf{c} \mid \theta_k)}{\sum_\mathbf{c} \prod_k p_k(\mathbf{c} \mid \theta_k)} \cdot \frac{\partial}{\partial \theta_n} p_n(\mathbf{c} \mid \theta_n) \nonumber \\
+&= \frac{\partial}{\partial \theta_n} \log p_n(\mathbf{d} \mid \theta_n) - \sum_\mathbf{c} \frac{\prod_k p_k(\mathbf{c} \mid \theta_k)}{\sum_\mathbf{c} \prod_k p_k(\mathbf{c} \mid \theta_k)} \cdot \frac{1}{p_n(\mathbf{c} \mid \theta_n)} \cdot \frac{\partial}{\partial \theta_n} p_n(\mathbf{c} \mid \theta_n) \nonumber \\
+&= \frac{\partial}{\partial \theta_n} \log p_n(\mathbf{d} \mid \theta_n) - \sum_\mathbf{c} \frac{\prod_k p_k(\mathbf{c} \mid \theta_k)}{\sum_\mathbf{c} \prod_k p_k(\mathbf{c} \mid \theta_k)} \cdot \frac{\partial}{\partial \theta_n} \log p_n(\mathbf{c} \mid \theta_n) \nonumber \\
+&= \frac{\partial}{\partial \theta_n} \log p_n(\mathbf{d} \mid \theta_n) - \sum_\mathbf{c} p(\mathbf{c} \mid \{\theta_k\}_{k = 1}^K) \cdot \frac{\partial}{\partial \theta_n} \log p_n(\mathbf{c} \mid \theta_n). \label{eq:2}
+\end{align}
+\item The second term on the RHS of Equation \eqref{eq:2} is the expected derivative of the log probability of an expert on fantasy data, $\mathbf{c}$, that is generated from the PoE.
+\item So, assuming each of the individual experts has a tractable derivative, the obvious difficulty in estimating the derivative of the log probability of the data under PoE is generating correctly distributed fantasy data.
+\item It is possible to use rejection sampling: each expert generates a data vector independently and this process is repeated until all the experts happen to agree. However, this is typically very inefficient.
+\item A MCMC method that uses Gibbs sampling is typically much more efficient.
+\item Samples from the PoE distribution have very high variance since they come from all over the model's distribution. This makes gradient ascent difficult.
+\end{itemize}
+
+\newpage
+
+\textbf{A brief explanation on sampling with known pdf.}
+\begin{itemize}
+\item Suppose we have a one-dimensional pdf $p(d)$.
+\item We can then calculate its cdf $F(d)$ by integrating $p(d)$.
+\item Let $U$ be a uniform random variable on $[0,1]$.
+\item What distribution does $X = F^{-1}(U)$ follow? If $F_X$ is the cdf of $X$,
+\begin{align*}
+F_X(d) = \PP(X \leq d) = \PP(F^{-1}(U) \leq d) = \PP(U \leq F(d)) = F(d)
+\end{align*}
+so we see that $F^{-1}(U)$ has the distribution $p(d)$.
+\item By passing samples from the uniform distribution on $[0,1]$ through $F^{-1}$, we get samples from $p(d)$.
+\end{itemize}
+
+\textbf{A brief explanation on MCMC.}
+\begin{itemize}
+\item Suppose we want to sample from an unnormalized distribution $p(\mathbf{d})$. That is,
+\begin{align*}
+\sum_\mathbf{c} p(\mathbf{c}) \neq 1
+\end{align*}
+where $\mathbf{c}$ indexes all possible vectors in the data space. In this paper, $p(\mathbf{d}) = \prod_k p_k(\mathbf{d} \mid \theta_k)$.
+\item If the space is extremely large, the sum is intractable.
+\item Then, we cannot calculate its cdf, so we cannot apply the inverse transform sampling technique.
+\item Denote an arbitrary initial distribution by $Q_0(\mathbf{d})$.
+\item Define a transition kernel $K$ which is a function that inputs and outputs distributions.
+\begin{align*}
+Q^1 = K Q^0, \qquad Q^n = K Q^{n - 1} =  K^n Q_0.
+\end{align*}
+\item $K$ is typically a function of $p(\mathbf{d})$.
+\item For an appropriate choice of $K$,
+\begin{align*}
+Q^\infty(\mathbf{d}) = \lim_{n \rightarrow \infty} Q^n(\mathbf{d}) = \frac{p(\mathbf{d})}{\sum_\mathbf{c} p(\mathbf{c})}.
+\end{align*}
+\item What property does $Q^\infty$ have?
+\begin{align*}
+Q^n = KQ^{n - 1} \implies \text{Let } n \rightarrow \infty \implies Q^\infty = KQ^\infty.
+\end{align*}
+That is, $Q^\infty$ is an eigenvector of $K$ with eigenvalue $1$. So
+\begin{align*}
+Q^n = Q^{n - 1} \implies KQ^{n - 1} = Q^{n - 1} \implies Q^{n - 1} = Q^\infty \implies Q^{n - 1}(\mathbf{d}) = \frac{p(\mathbf{d})}{\sum_\mathbf{c} p(\mathbf{c})}.
+\end{align*}
+We also say $Q^\infty$ is a \textit{fixed point} of $K$.
+\item MCMC is an iterative sampling technique, which
+\begin{itemize}
+\item at the $0$-th step, samples from $Q^0$,
+\item at the $n$-th step, uses samples from $Q^{n - 1}$ to sample from $Q^n$.
+\end{itemize}
+\item Gibbs sampling is a type of MCMC sampling.
+\item For more information, see
+\begin{itemize}
+\item \textit{An Introduction to MCMC for Machine Learning},
+\item \textit{Gibbs Sampling for the Uninitiated}.
+\end{itemize}
+\end{itemize}
+
+\newpage
+
+\section{Learning by Minimizing Contrastive Divergence}
+
+\begin{itemize}
+\item Let $Q^0$ be the data distribution and $Q^\infty$ be the equilibrium distribution $Q^\infty$ that is produced by prolonged Gibbs sampling from the generated model.
+\begin{align*}
+Q^\infty(\mathbf{d}) = p(\mathbf{d} \mid \{\theta_k\}_{k = 1}^K).
+\end{align*}
+\item Maximizing the log likelihood of the data (averaged over the data distribution) is equivalent to minimizing the Kullback-Leibler divergence between $Q^0$ and $Q^\infty$.
+\begin{align}
+\KL(Q^0 \| Q^\infty) = \sum_\mathbf{d} Q^0(\mathbf{d}) \log Q^0(\mathbf{d}) - \sum_\mathbf{d} Q^0(\mathbf{d}) \log Q^\infty(\mathbf{d}) = -H(Q^0) - \EE_{Q^0}[\log Q^\infty(\mathbf{d})] \label{eq:3}
+\end{align}
+Since $H(Q^0)$ does not depend on the parameters of the model,
+\begin{align*}
+\argmin_{\theta_k} \KL(Q^0 \| Q^\infty) = \argmax_{\theta_k} \EE_{Q^0}[\log Q^\infty(\mathbf{d})].
+\end{align*}
+\item Recall Equation \eqref{eq:2}
+\begin{align*}
+\frac{\partial \log p(\mathbf{d} \mid \{\theta_k\}_{k = 1}^K)}{\partial \theta_n}  &= \frac{\partial \log p_n(\mathbf{d} \mid \theta_n)}{\partial \theta_n} - \sum_\mathbf{c} p(\mathbf{c} \mid \{\theta_k\}_{k = 1}^K) \cdot \frac{\partial \log p_n(\mathbf{c} \mid \theta_n)}{\partial \theta_n} \\
+&= \frac{\partial \log p_n(\mathbf{d} \mid \theta_n)}{\partial \theta_n} - \EE_{Q^\infty} \left[ \frac{\partial \log p_n(\mathbf{c} \mid \theta_n)}{\partial \theta_n} \right]
+\end{align*}
+\item Equation \eqref{eq:2}, averaged over the data distribution, can be rewritten as
+\begin{align}
+\EE_{Q^0} \left[ \frac{\partial \log Q^\infty(\mathbf{d})}{\partial \theta_n} \right] = \EE_{Q^0} \left[ \frac{\partial \log p_n(\mathbf{d} \mid \theta_n)}{\partial \theta_n} \right] - \EE_{Q^\infty} \left[ \frac{\partial \log p_n(\mathbf{c} \mid \theta_n)}{\partial \theta_n} \right]. \label{eq:4}
+\end{align}
+\item To perform a single step of gradient ascent, we need to run Gibbs sampling for a long time!
+\item There is a simple and effective alternative to maximum likelihood learning which eliminates almost of all of the computation required to get samples from $Q^\infty$ and also eliminates much of the variance that masks the gradient signal.
+\item Instead of minimizing $\KL(Q^0\|Q^\infty)$, we minimize the \textit{contrastive divergence}
+\begin{align*}
+\KL(Q^0\|Q^\infty) - \KL(Q^1\|Q^\infty)
+\end{align*}
+where $Q^1$ is the distribution over one step of Gibbs sampling.
+\item Because $Q^1$ is one step closer to $Q^\infty$ than $Q^0$, we are guaranteed that
+\begin{align*}
+\KL(Q^0 \| Q^\infty) \geq \KL(Q^1 \| Q^\infty) \implies \KL(Q^0\|Q^\infty) - \KL(Q^1\|Q^\infty) \geq 0.
+\end{align*}
+\item What property does the solution have?
+\begin{align*}
+Q^0 = Q^1 \implies Q^0 = Q^\infty \implies \text{PoE perfectly models the data distribution.}
+\end{align*}
+\end{itemize}
+
+\newpage
+
+\begin{itemize}
+\item How do we optimize the contrastive divergence objective? Observe that by \eqref{eq:3} and \eqref{eq:4},
+\begin{align*}
+- \frac{\partial}{\partial \theta_n} \KL(Q^0 \| Q^\infty) &= \frac{\partial}{\partial \theta_n} (H(Q^0) + \EE_{Q^0}[\log Q^\infty(\mathbf{d})]) \\
+&= \EE_{Q^0} \left[ \frac{\partial \log Q^\infty(\mathbf{d})}{\partial \theta_n} \right] \\
+&= \EE_{Q^0} \left[ \frac{\partial \log p_n(\mathbf{d} \mid \theta_n)}{\partial \theta_n} \right] - \EE_{Q^\infty} \left[ \frac{\partial \log p_n(\mathbf{c} \mid \theta_n)}{\partial \theta_n} \right].
+\end{align*}
+We also have (recall that $Q^1 = KQ^0$, where the transition kernel $K$ depends on $\prod_k p_k(\mathbf{d} \mid \theta_k)$) 
+\begin{align*}
+- \frac{\partial}{\partial \theta_n} \KL(Q^1 \| Q^\infty) &= - \frac{\partial Q^1}{\partial \theta_n} \frac{\partial \KL(Q^1 \| Q^\infty)}{\partial Q^1} - \frac{\partial Q^\infty}{\partial \theta_n} \frac{\partial \KL(Q^1 \| Q^\infty)}{\partial Q^\infty} \\
+&= - \frac{\partial Q^1}{\partial \theta_n} \frac{\partial \KL(Q^1 \| Q^\infty)}{\partial Q^1} + \EE_{Q^1} \left[ \frac{\partial \log p_n(\mathbf{\hat{\mathbf{d}}} \mid \theta_n)}{\partial \theta_n} \right] - \EE_{Q^\infty} \left[ \frac{\partial \log p_n(\mathbf{c} \mid \theta_n)}{\partial \theta_n} \right]
+\end{align*}
+where $\mathbf{\hat{d}} \sim Q^1(\mathbf{\hat{d}})$. It follows that
+\begin{align}
+\frac{\partial}{\partial \theta_n} (\KL(Q^0\|Q^\infty) - \KL(Q^1\|Q^\infty)) &= \EE_{Q^0} \left[ \frac{\partial \log p_n(\mathbf{d} \mid \theta_n)}{\partial \theta_n} \right] - \EE_{Q^1} \left[ \frac{\partial \log p_n(\mathbf{\hat{\mathbf{d}}} \mid \theta_n)}{\partial \theta_n} \right] \nonumber \\
+&\quad + \frac{\partial Q^1}{\partial \theta_n} \frac{\partial \KL(Q^1 \| Q^\infty)}{\partial Q^1}. \label{eq:5}
+\end{align}
+\item If each expert is chosen to be tractable, it is possible to compute the exact values of the derivatives of $\log p_m(\mathbf{d} \mid \theta_m)$ and $\log p_m(\mathbf{\hat{d}} \mid \theta_m)$.
+\item It is also straightforward to sample from $Q^0$ and $Q^1$. To sample from $Q^0$, just randomly pick samples in the training set. To sample from $Q^1$, simply run one step of Gibbs sampling.
+\item The third term on the RHS of \eqref{eq:5} is problematic, but extensive simulations show that it can safely be ignored because it is small and it seldom opposes the resultant of the other two terms.
+\item The parameters of the experts can therefore be adjusted in proportion to the approximate derivative of the contrastive divergence.
+\begin{align*}
+\Delta \theta_m \propto \EE_{Q^0} \left[ \frac{\partial \log p_n(\mathbf{d} \mid \theta_n)}{\partial \theta_n} \right] - \EE_{Q^1} \left[ \frac{\partial \log p_n(\mathbf{\hat{\mathbf{d}}} \mid \theta_n)}{\partial \theta_n} \right]
+\end{align*}
+\item The difference in the derivatives of the data vectors and their reconstructions have some variance because the reconstruction procedure is stochastic. But when the PoE is modeling the data moderately well, the one-step reconstructions will be very similar to the data so the variance will be very small.
+\end{itemize}
+
+\newpage
+
+\setcounter{section}{6}
+\section{PoEs and Boltzmann Machines}
+
+\begin{itemize}
+\item Consider a training set of binary vectors which we will assume are binary images.
+\item The training set can be modeled using a two-layer network called a RBM in which stochastic, binary pixels are connected to stochastic, binary feature detectors.
+\item The pixels correspond to visible units of the RBM because their states are observed.
+\item The feature detectors correspond to hidden units.
+\item A joint configuration, $(\mathbf{v},\mathbf{h})$ of the visible and hidden units has an energy given by
+\begin{align*}
+E(\mathbf{v},\mathbf{h}, \{\mathbf{w}_k\}_{k = 1}^K) = -\sum_{k = 1}^K \langle \mathbf{w}_k, \mathbf{v} \rangle \cdot h_k
+\end{align*}
+for weights $\mathbf{w}_k$, $k = 1, \ldots, K$.
+\item General RBMs also have biases, which I have omitted for simplicity.
+\item RBM defines the probability distribution
+\begin{align*}
+p(\mathbf{v},\mathbf{h} \mid \{\mathbf{w}_k\}_{k = 1}^K) = \frac{1}{Z} e^{-E(\mathbf{v},\mathbf{h}, \{\mathbf{w}_k\}_{k = 1}^K)}, \qquad Z = \sum_\mathbf{v} \sum_\mathbf{h} e^{-E(\mathbf{v},\mathbf{h},\{\mathbf{w}_k\}_{k = 1}^K)}.
+\end{align*}
+\item How are RBMs related to PoEs? Observe that
+\begin{align*}
+p(\mathbf{v} \mid \{\mathbf{w}_k\}_{k = 1}^K) &= \sum_{\mathbf{h} \in \{0, 1\}^K} p(\mathbf{v}, \mathbf{h} \mid \{\mathbf{w}_k\}_{k = 1}^K) \\
+&= \frac{1}{Z} \sum_{\mathbf{h} \in \{0, 1\}^K} \exp\left\{ -\sum_{k = 1}^K \langle \mathbf{w}_k, \mathbf{v} \rangle \cdot h_k \right\} \\
+&= \frac{1}{Z} \sum_{\mathbf{h} \in \{0, 1\}^K} \prod_{k = 1}^K \exp\left\{ - \langle \mathbf{w}_k \cdot \mathbf{v} \rangle \cdot h_k \right\} \\
+&= \frac{1}{Z} \prod_{k = 1}^K (1 + \exp\left\{ - \langle \mathbf{w}_k \cdot \mathbf{v} \rangle \right\}) \qquad \text{(why?)}
+\end{align*}
+so if we define
+\begin{align*}
+p_k(\mathbf{v} \mid \mathbf{w}_k) = 1 + \exp\left\{ - \langle \mathbf{w}_k \cdot \mathbf{v} \rangle \right\},
+\end{align*}
+we get the PoE model
+\begin{align*}
+p(\mathbf{v} \mid \{\mathbf{w}_k\}_{k = 1}^K) = \frac{1}{Z} \prod_{k = 1}^K p_k(\mathbf{v} \mid \mathbf{w}_k).
+\end{align*}
+\item Hence, we can train RBMs via contrastive divergence.
+\item For more information on RBMs, see
+\begin{itemize}
+\item \textit{A Practical Guide to Training RBMs}.
+\end{itemize}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
