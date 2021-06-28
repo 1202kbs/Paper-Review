@@ -106,7 +106,7 @@ where $\mathbf{c}$ indexes all possible vectors in the data space.
 
 \newpage
 
-\textbf{A brief explanation on sampling with known pdf.}
+\textbf{A brief explanation on sampling with tractable pdf.}
 \begin{itemize}
 \item Suppose we have a one-dimensional pdf $p(d)$.
 \item We can then calculate its cdf $F(d)$ by integrating $p(d)$.
@@ -123,10 +123,10 @@ so we see that $F^{-1}(U)$ has the distribution $p(d)$.
 \begin{itemize}
 \item Suppose we want to sample from an unnormalized distribution $p(\mathbf{d})$. That is,
 \begin{align*}
-\sum_\mathbf{c} p(\mathbf{c}) \neq 1
+\int_\mathbf{c} p(\mathbf{c}) \neq 1
 \end{align*}
 where $\mathbf{c}$ indexes all possible vectors in the data space. In this paper, $p(\mathbf{d}) = \prod_k p_k(\mathbf{d} \mid \theta_k)$.
-\item If the space is extremely large, the sum is intractable.
+\item If the space is extremely large, the integral is intractable.
 \item Then, we cannot calculate its cdf, so we cannot apply the inverse transform sampling technique.
 \item Denote an arbitrary initial distribution by $Q_0(\mathbf{d})$.
 \item Define a transition kernel $K$ which is a function that inputs and outputs distributions.
@@ -136,7 +136,7 @@ Q^1 = K Q^0, \qquad Q^n = K Q^{n - 1} =  K^n Q_0.
 \item $K$ is typically a function of $p(\mathbf{d})$.
 \item For an appropriate choice of $K$,
 \begin{align*}
-Q^\infty(\mathbf{d}) = \lim_{n \rightarrow \infty} Q^n(\mathbf{d}) = \frac{p(\mathbf{d})}{\sum_\mathbf{c} p(\mathbf{c})}.
+Q^\infty(\mathbf{d}) = \lim_{n \rightarrow \infty} Q^n(\mathbf{d}) = \frac{p(\mathbf{d})}{\int_\mathbf{c} p(\mathbf{c})}.
 \end{align*}
 \item What property does $Q^\infty$ have?
 \begin{align*}
@@ -144,7 +144,7 @@ Q^n = KQ^{n - 1} \implies \text{Let } n \rightarrow \infty \implies Q^\infty = K
 \end{align*}
 That is, $Q^\infty$ is an eigenvector of $K$ with eigenvalue $1$. So
 \begin{align*}
-Q^n = Q^{n - 1} \implies KQ^{n - 1} = Q^{n - 1} \implies Q^{n - 1} = Q^\infty \implies Q^{n - 1}(\mathbf{d}) = \frac{p(\mathbf{d})}{\sum_\mathbf{c} p(\mathbf{c})}.
+Q^n = Q^{n - 1} \implies KQ^{n - 1} = Q^{n - 1} \implies Q^{n - 1} = Q^\infty \implies Q^{n - 1}(\mathbf{d}) = \frac{p(\mathbf{d})}{\int_\mathbf{c} p(\mathbf{c})}.
 \end{align*}
 We also say $Q^\infty$ is a \textit{fixed point} of $K$.
 \item MCMC is an iterative sampling technique, which
