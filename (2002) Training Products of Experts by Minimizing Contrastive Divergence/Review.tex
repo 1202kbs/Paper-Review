@@ -44,19 +44,21 @@
 \DeclareMathOperator*{\argmin}{arg\,min}
 
 
-\title{Training Products of Experts by Minimizing Contrastive Divergence}
-\author{Geoffrey E. Hinton}
-\date{August 1, 2002}
+\title{Paper Review: Training Products of Experts by Minimizing Contrastive Divergence}
+\author{Beomsu Kim\footnote{Department of Mathematical Sciences, KAIST. Email \texttt{beomsu.kim@kaist.ac.kr}}}
+\date{June 28, 2021}
 
 
 \begin{document}
+
+\maketitle
 
 \textbf{Paper Information.}
 
 \begin{itemize}
 \item Geoffrey E. Hinton. Training Products of Experts by Minimizing Contrastive Divergence. \underline{Neural Computation}, 14(8):1771--1800, 2002.
 \item $5000+$ citations.
-\item Approximately $500+$ citations per year, since 2015.
+\item $500+$ citations per year since 2015.
 \end{itemize}
 
 \section{Introduction}
@@ -121,9 +123,9 @@ so we see that $F^{-1}(U)$ has the distribution $p(d)$.
 
 \textbf{A brief explanation on MCMC.}
 \begin{itemize}
-\item Suppose we want to sample from an unnormalized distribution $p(\mathbf{d})$. That is,
+\item Suppose we want to sample from an unnormalized or intractable distribution $p(\mathbf{d})$. That is,
 \begin{align*}
-\int_\mathbf{c} p(\mathbf{c}) \neq 1
+\int_\mathbf{c} p(\mathbf{c}) \neq 1 \quad \text{or} \quad F(\mathbf{d}) \text{ is difficult to compute}.
 \end{align*}
 where $\mathbf{c}$ indexes all possible vectors in the data space. In this paper, $p(\mathbf{d}) = \prod_k p_k(\mathbf{d} \mid \theta_k)$.
 \item If the space is extremely large, the integral is intractable.
@@ -140,7 +142,7 @@ Q^\infty(\mathbf{d}) = \lim_{n \rightarrow \infty} Q^n(\mathbf{d}) = \frac{p(\ma
 \end{align*}
 \item What property does $Q^\infty$ have?
 \begin{align*}
-Q^n = KQ^{n - 1} \implies \text{Let } n \rightarrow \infty \implies Q^\infty = KQ^\infty.
+Q^n = KQ^{n - 1} \implies Q^\infty = \lim_{n \rightarrow \infty} Q^n = \lim_{n \rightarrow \infty} KQ^{n - 1} = KQ^\infty.
 \end{align*}
 That is, $Q^\infty$ is an eigenvector of $K$ with eigenvalue $1$. So
 \begin{align*}
@@ -259,7 +261,7 @@ p(\mathbf{v} \mid \{\mathbf{w}_k\}_{k = 1}^K) &= \sum_{\mathbf{h} \in \{0, 1\}^K
 &= \frac{1}{Z} \sum_{\mathbf{h} \in \{0, 1\}^K} \prod_{k = 1}^K \exp\left\{ - \langle \mathbf{w}_k \cdot \mathbf{v} \rangle \cdot h_k \right\} \\
 &= \frac{1}{Z} \prod_{k = 1}^K (1 + \exp\left\{ - \langle \mathbf{w}_k \cdot \mathbf{v} \rangle \right\}) \qquad \text{(why?)}
 \end{align*}
-so if we define
+so if we define the \enquote{expert}
 \begin{align*}
 p_k(\mathbf{v} \mid \mathbf{w}_k) = 1 + \exp\left\{ - \langle \mathbf{w}_k \cdot \mathbf{v} \rangle \right\},
 \end{align*}
