@@ -1,0 +1,226 @@
+\documentclass[10pt]{article}
+
+\usepackage{mathtools}
+\usepackage{fullpage}
+\usepackage{latexsym}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{mathrsfs}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{bm}
+
+\newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\EE}{\mathbb{E}}
+
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KK}{\mathcal{K}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\NN}{\mathcal{N}}
+\newcommand{\OO}{\mathcal{O}}
+
+\newcommand{\KL}{D_{\text{KL}}}
+
+\newcommand{\data}{\texttt{data}}
+
+\DeclareMathOperator{\SL}{SL}
+\DeclareMathOperator{\re}{Re}
+\DeclareMathOperator{\im}{Im}
+\DeclareMathOperator{\diam}{diam}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\title{Paper Review: Estimation of Non-Normalized Statistical Models by Score Matching}
+\author{Beomsu Kim\footnote{Department of Mathematical Sciences, KAIST. Email \texttt{beomsu.kim@kaist.ac.kr}}}
+\date{June 29, 2021}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Paper Information.}
+
+\begin{itemize}
+\item Aapo Hyv\"{a}rinen. Estimation of Non-Normalized Statistical Models by Score Matching. \newline \underline{Journal of Machine Learning Research}, 6(24):695--709, 2005.
+\end{itemize}
+
+\section{Introduction}
+
+\begin{itemize}
+\item Assume we observe a random vectors $\mathbf{x} \in \RR^n$ which has a pdf denoted by $p_\mathbf{x}(\cdot)$.
+\item We have a parametrized density model $p(\cdot;\theta)$, where $\theta$ is an $m$-dimensional vector of parameters.
+\item We want to approximate $p_\mathbf{x}(\cdot)$ by $p(\cdot;\hat{\theta})$ for the estimated parameter value $\hat{\theta}$.
+\item We only are able to compute the pdf given by the model up to a multiplicative constant $Z(\bm{\theta})$.
+\begin{align*}
+p(\xi;\theta) = \frac{1}{Z(\bm{\theta})} q(\xi;\bm{\theta}), \qquad Z(\bm{\theta}) = \int_{\xi \in \RR^n} q(\xi;\bm{\theta}) \, d\xi
+\end{align*}
+where the calculation of $Z(\bm{\theta})$ is intractable, even by numerical methods.
+\end{itemize}
+
+\newpage
+
+\section{Estimation by Score Matching}
+
+\begin{itemize}
+\item Define
+\begin{align*}
+\Psi(\xi;\bm{\theta}) =
+\begin{bmatrix}
+\frac{\partial \log p(\xi;\bm{\theta})}{\partial \xi_1} \\
+\vdots \\
+\frac{\partial \log p(\xi;\bm{\theta})}{\partial \xi_n}
+\end{bmatrix} =
+\begin{bmatrix}
+\Psi_1(\xi;\bm{\theta}) \\
+\vdots \\
+\Psi_n(\xi;\bm{\theta})
+\end{bmatrix} = \nabla_\xi \log p(\xi;\bm{\theta}).
+\end{align*}
+We call this the score function, although according to the conventional definition, it is actually the gradient with respect the parameters.
+\item Observe that
+\begin{align}
+\Psi(\xi;\bm{\theta}) = \nabla_\xi \log q(\xi;\bm{\theta}). \label{eq:1}
+\end{align}
+\item Likewise, we denote by
+\begin{align*}
+\Psi_\mathbf{x}(\cdot) = \nabla_\xi \log p_\mathbf{x}(\cdot)
+\end{align*}
+the score function of the distribution of observed data $\mathbf{x}$.
+\item We now propose that the model is estimated by minimizing the expected squared distance between the model score function $\Psi(\cdot;\bm{\theta})$ and the data score function $\Psi_\mathbf{x}(\cdot)$.
+\begin{align}
+J(\bm{\theta}) = \frac{1}{2} \int_{\xi \in \RR^n} p_\mathbf{x}(\xi) \|\Psi(\xi;\bm{\theta}) - \Psi_\mathbf{x}(\xi)\|^2 \, d\xi. \label{eq:2}
+\end{align}
+\item Our \textit{score matching} estimator of $\bm{\theta}$ is given by
+\begin{align*}
+\bm{\hat{\theta}} = \argmin_{\bm{\theta}} J(\bm{\theta}).
+\end{align*}
+\item The motivation for this estimator is that the score function can be directly computed from $q$ as in \eqref{eq:1}, and we do not need to compute $Z$.
+\item However, this may still seem to be a very difficult way of estimation $\bm{\theta}$, since we might have to compute an estimator of the data score function $\Psi_\mathbf{x}$ from the observed sample, which is basically a non-parametric estimation problem.
+\item No such non-parametric estimation is needed, because we can use a simple trick of partial integration to compute the objective function very easily.
+\end{itemize}
+
+\newpage
+
+\textbf{Theorem 1} \textit{Assume that
+\begin{enumerate}
+\item the model score function $\Psi(\xi;\bm{\theta})$ is differentiable,
+\item the data pdf $p_\mathbf{x}(\xi)$ is differentiable,
+\item the expectations $\EE_\mathbf{x}[ \|\Psi(\mathbf{x};\bm{\theta})\|^2 ]$ and $\EE_\mathbf{x}[ \|\Psi_\mathbf{x}(\mathbf{x})\|^2 ]$ are finite for any $\bm{\theta}$,
+\item $p_\mathbf{x}(\xi) \Psi(\xi;\bm{\theta}) \rightarrow 0$ as $\|\xi\| \rightarrow \infty$.
+\end{enumerate}
+Then, the objective function in \eqref{eq:2} can be expressed as}
+\begin{align}
+J(\bm{\theta}) = \int_{\xi \in \RR^n} p_\mathbf{x}(\xi) \sum_{i = 1}^n \left[ \partial_i \Psi_i(\xi;\bm{\theta}) + \frac{1}{2} \Psi_i(\xi;\bm{\theta})^2 \right] \, d\xi + C \label{eq:3}
+\end{align}
+\textit{where $C$ is a constant independent of $\bm{\theta}$, and}
+\begin{align*}
+\partial_i \Psi_i(\xi;\bm{\theta}) = \frac{\partial \Psi_i(\xi;\bm{\theta)}}{\partial \xi_i} = \frac{\partial^2 \log q(\xi;\bm{\theta})}{\partial \xi_i^2}.
+\end{align*}
+
+\begin{proof}
+Definition \eqref{eq:2} gives
+\begin{align*}
+J(\bm{\theta}) = \int p_\mathbf{x}(\xi) \left[ \frac{1}{2} \|\Psi_\mathbf{x}(\xi)\|^2 + \frac{1}{2} \|\Psi(\xi;\bm{\theta})\|^2 - \Psi_\mathbf{x}(\xi)^\top \Psi(\xi;\bm{\theta}) \right] \, d\xi.
+\end{align*}
+The integral of the first term in brackets does not depend on $\bm{\theta}$, so we set it as a constant $C$. Also,
+\begin{align*}
+\int p_\mathbf{x}(\xi) \left[ \frac{1}{2} \| \Psi(\xi;\bm{\theta}) \|^2 \right] \, d\xi = \int p_\mathbf{x}(\xi) \sum_{i = 1}^n \left[ \frac{1}{2} \Psi_i(\xi;\bm{\theta})^2 \right] \, d\xi
+\end{align*}
+Finally,
+\begin{align*}
+&\int p_\mathbf{x}(\xi) \left[ - \Psi_\mathbf{x}(\xi)^\top \Psi(\xi;\bm{\theta}) \right] \, d\xi \\
+&= \int p_\mathbf{x}(\xi) \sum_{i = 1}^n \left[ -\frac{\partial \log p_\mathbf{x}(\xi)}{\partial \xi_i} \cdot \Psi_i(\xi;\bm{\theta}) \right] \, d\xi \\
+&= \int \sum_{i = 1}^n \left[ -\frac{\partial p_\mathbf{x}(\xi)}{\partial \xi_i} \cdot \Psi_i(\xi;\bm{\theta}) \right] \, d\xi \\
+&= -\sum_{i = 1}^n \left[ \lim_{\xi_i \rightarrow \infty} p_\mathbf{x}(\xi) \cdot \Psi_i(\xi;\bm{\theta}) - \lim_{\xi_i \rightarrow -\infty} p_\mathbf{x}(\xi) \cdot \Psi_i(\xi;\bm{\theta}) \right] + \int \sum_{i = 1}^n p_\mathbf{x}(\xi) \cdot \partial_i \Psi_i(\xi;\bm{\theta}) \, d\xi \\
+&= \int p_\mathbf{x}(\xi) \sum_{i = 1}^n \partial_i \Psi_i(\xi;\bm{\theta}) \, d\xi
+\end{align*}
+by integration by parts. This concludes the proof.
+\end{proof}
+
+\newpage
+
+\begin{itemize}
+\item In practice, we have $T$ observations of the random vector $\mathbf{x}$, denoted by $\mathbf{x}(1), \ldots, \mathbf{x}(T)$. The sample version of $J$ is obvious obtained from \eqref{eq:3} as
+\begin{align}
+\tilde{J}(\bm{\theta}) = \frac{1}{T} \sum_{t = 1}^T \sum_{i = 1}^n \left[ \partial_i \Psi_i(\mathbf{x}(t);\bm{\theta}) + \frac{1}{2} \Psi_i(\mathbf{x}(t);\bm{\theta})^2 \right] + C \label{eq:4}
+\end{align}
+which is asymptotically equivalent to $J$ due to the law of large numbers.
+\end{itemize}
+
+\textbf{Theorem 2} \textit{Assume that
+\begin{enumerate}
+\item $p_\mathbf{x}(\cdot) = p(\cdot;\bm{\theta}^*)$ for some $\bm{\theta}^*$,
+\item no other parameter value gives a pdf that is equal to $p(\cdot;\bm{\theta}^*)$,
+\item $q(\xi;\bm{\theta}) > 0$ for all $\xi$, $\bm{\theta}$.
+\end{enumerate}
+We then have}
+\begin{align*}
+J(\bm{\theta}) = 0 \iff \bm{\theta} = \bm{\theta}^*.
+\end{align*}
+
+\begin{proof}
+Assume $J(\bm{\theta}) = 0$. Then, the assumption $q > 0$ implies $p_\mathbf{x}(\xi) > 0$ for all $\xi$, which implies that $\Psi_\mathbf{x}(\cdot)$ and $\Psi(\cdot;\bm{\theta})$ are equal. This implies $\log p_\mathbf{x}(\cdot) = \log p(\cdot;\bm{\theta}) + c$ for some constant $c$. But $c$ is necessarily $0$ because both $p_\mathbf{x}$ and $p(\cdot;\bm{\theta})$ are pdfs. Thus, $p_\mathbf{x} = p(\cdot;\bm{\theta})$. By assumption, only $\bm{\theta} = \bm{\theta}^*$ fulfills this equality, so necessarily $\bm{\theta} = \bm{\theta}^*$, and we have proven the implication from left to right. The converse is trivial.
+\end{proof}
+
+\textbf{Corollary 3} \textit{Under the assumptions of the preceding Theorems, the score matching estimator obtained by minimization of $\tilde{J}$ is consistent, i.e., it converges in probability towards the true value of $\bm{\theta}$ when the sample size approaches infinity, assuming that the optimization algorithm is able to find the global minimum.}
+
+\begin{proof}
+As sample size approaches infinity, $\tilde{J}$ converges to $J$ in probability by the law of large numbers. Thus, the estimator converges to a point where $J$ is globally minimized. By Theorem 2, the global minimum is unique and found at the true parameter value (obviously, $J$ cannot be negative).
+\end{proof}
+
+\begin{itemize}
+\item The result of consistency assumes that the global minimum of $\tilde{J}$ is found by the optimization algorithm used in the estimation. In practice, this may not be true, in particular because there may be several local minima. Then, the consistency is of local nature, i.e., the estimator is consistent if the optimization iteration is started sufficiently close to the true value.
+\item Note that consistency implies asymptotic unbiasedness.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
