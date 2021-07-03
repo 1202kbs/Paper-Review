@@ -1,0 +1,289 @@
+\documentclass[10pt]{article}
+
+\usepackage{mathtools}
+\usepackage{fullpage}
+\usepackage{latexsym}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{mathrsfs}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{bm}
+
+\newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\EE}{\mathbb{E}}
+
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KK}{\mathcal{K}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\NN}{\mathcal{N}}
+\newcommand{\OO}{\mathcal{O}}
+
+\newcommand{\inner}[2]{\left\langle #1, #2 \right\rangle}
+
+\newcommand{\KL}{D_{\text{KL}}}
+\newcommand{\DAE}{J_{DAE_\sigma}}
+\newcommand{\ESM}{J_{ESM_q}}
+\newcommand{\ISM}{J_{ISM_q}}
+\newcommand{\ESMP}{J_{ESM_\sigma}}
+\newcommand{\ISMP}{J_{ISM_\sigma}}
+\newcommand{\DSM}{J_{DSM_{q_\sigma}}}
+
+\newcommand{\data}{\texttt{data}}
+
+\DeclareMathOperator{\SL}{SL}
+\DeclareMathOperator{\re}{Re}
+\DeclareMathOperator{\im}{Im}
+\DeclareMathOperator{\diam}{diam}
+\DeclareMathOperator{\encode}{encode}
+\DeclareMathOperator{\decode}{decode}
+\DeclareMathOperator{\sigmoid}{sigmoid}
+\DeclareMathOperator{\softplus}{softplus}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\title{Paper Review: A Connection Between Score Matching and Denoising Autoencoders}
+\author{Beomsu Kim\footnote{Department of Mathematical Sciences, KAIST. Email \texttt{beomsu.kim@kaist.ac.kr}}}
+\date{July 6, 2021}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Paper Information.}
+
+\begin{itemize}
+\item Pascal Vincent. A Connection Between Score Matching and Denoising Autoencoders. \newline \underline{Neural Computation}, 23(7):1661--1674, 2011.
+\end{itemize}
+
+\section{Introduction}
+
+\begin{itemize}
+\item $q(x)$ : unknown true pdf, $x \in \RR^d$.
+\item $D_n = \{x^{(1)}, \ldots, x^{(n)}\}$ : training set of $n$ i.i.d. samples from $q(x)$.
+\item $q_0(x) = \frac{1}{n} \sum_{i = 1}^n \delta(\|x - x^{(i)}\|)$ : empirical pdf associated with $D_n$.
+\item $q_\sigma(\tilde{x} \mid x) = \frac{1}{(2\pi)^{d/2} \sigma^d} e^{-\frac{1}{2\sigma^2} \|\tilde{x} - x\|^2}$ : smoothing kernel or noise model.
+\item $q_\sigma(\tilde{x},x) = q_\sigma(\tilde{x} \mid x) q_0(x)$ : joint pdf.
+\item $q_\sigma(\tilde{x}) = \frac{1}{n} \sum_{i = 1}^n q_\sigma(\tilde{x}, x^{(i)})$ : Parzen density estimate based on $D_n$, obtainable by marginalizing $q_\sigma(\tilde{x}, x)$.
+\item $p(x;\theta)$ : density model with parameters $\theta$.
+\item $J_1 \cong J_2$ : means $J_1(\theta)$ and $J_2(\theta)$ have the same set of minimizers.
+\item $\EE_{q(x)} [g(x)] = \int_x q(x) g(x) \, dx$ : expectation with respect to distribution $q(x)$.
+\item $\softplus(x) = \log(1 + e^x)$ : will be applied elementwise to vectors.
+\item $\sigmoid(x) = \frac{1}{1 + e^{-x}} = \softplus'(x)$ : will be applied elementwise to vectors.
+\item $I$ : identity matrix.
+\item $W^\top$ : transpose of matrix $W$.
+\item $W_i$ : vector for $i$th row of $W$.
+\item $W_{\cdot,j}$ : vector for $j$th column of $W$.
+\end{itemize}
+
+\newpage
+
+\section{Denoising Autoencoders}
+
+\begin{itemize}
+\item A training input $x \in D_n$ is first corrupted by additive Gaussian noise of covariance $\sigma^2 I$ yielding corrupted input $\tilde{x} = x + \epsilon$, $\epsilon \sim \NN(0, \sigma^2 I)$. This corresponds to conditional density
+\begin{align*}
+q_\sigma(\tilde{x} \mid x) = \frac{1}{(2\pi)^{d / 2} \sigma^d} e^{-\frac{1}{2\sigma^2} \|\tilde{x} - x\|^2}.
+\end{align*}
+\item The corrupted version $\tilde{x}$ is encoded into a hidden representation $h$ through an affine mapping followed by a nonlinearity.
+\begin{align*}
+h = \encode(\tilde{x}) = \sigmoid(W\tilde{x} + b)
+\end{align*}
+\item The hidden representation $h$ is decoded into reconstruction $x^r$ through affine mapping.
+\begin{align*}
+x^r = \decode(h) = W^\top h + c
+\end{align*}
+\item The parameters $\theta = \{W, b, c\}$ are optimized so that the expected squared reconstruction error $\|x^r - x\|^2$ is minimized, i.e., the objective function being minimized by such a denoising autoencoder (DAE) is
+\begin{align*}
+\DAE(\theta) &= \EE_{q_\sigma(\tilde{x},x)} [\|\decode(\encode(\tilde{x})) - x\|^2 ] \\
+&= \EE_{q_\sigma(\tilde{x},x)} [ \|W^\top \sigmoid( W \tilde{x} + b) + c - x\|^2 ].
+\end{align*}
+\end{itemize}
+
+\section{Score Matching}
+
+\subsection{Explicit Score Matching (ESM)}
+
+\begin{itemize}
+\item Define the energy-based model
+\begin{align*}
+p(x;\theta) = \frac{1}{Z(\theta)} \exp(-E(x;\theta)), \qquad Z(\theta) = \int_x \exp(-E(x;\theta)) \, dx.
+\end{align*}
+\item Define the score function
+\begin{align*}
+\Psi(x;\theta) = \frac{\partial \log p(x;\theta)}{\partial x}.
+\end{align*}
+\item Explicit score matching minimizes
+\begin{align*}
+\ESM(\theta) = \EE_{q(x)} \left[ \frac{1}{2} \left\| \Psi(x;\theta) - \frac{\partial \log q(x)}{\partial x} \right\|^2 \right].
+\end{align*}
+\end{itemize}
+
+\subsection{Implicit Score Matching (ISM)}
+
+\begin{itemize}
+\item Define
+\begin{align*}
+\ISM(\theta) = \EE_{q(x)} \left[ \frac{1}{2} \|\Psi(x;\theta)\|^2 + \sum_{i = 1}^d \frac{\partial \Psi_i(x;\theta)}{\partial x_i} \right].
+\end{align*}
+\item Hyv\"{a}rinen in \textit{Estimation of Non-normalized Statistical Models by Score Matching} shows that
+\begin{align*}
+\ESM \cong \ISM.
+\end{align*}
+\end{itemize}
+
+\newpage
+
+\section{Linking Score Matching to the DAE Objective}
+
+\subsection{Matching the Score of a Non-Parametric Estimator}
+
+\begin{itemize}
+\item Matching $\Psi(x;\theta)$ with the score of Parzen windows density estimator $q_\sigma(\tilde{x})$ yields
+\begin{align*}
+\ESMP(\theta) = \EE_{q_\sigma(\tilde{x})} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) - \frac{\partial \log q_\sigma(\tilde{x})}{\partial \tilde{x}} \right\|^2 \right].
+\end{align*}
+\item $q_\sigma(\tilde{x})$ satisfies the regularities conditions for implicit score matching, so
+\begin{align*}
+\ESMP \cong \ISMP.
+\end{align*}
+\item This equivalence breaks in the limit $\sigma \rightarrow 0$, because $q_\sigma$ no longer satisfies the regularity conditions, and $\ESMP$ can no longer be computed (whereas $\ISMP$ remains well-behaved).
+\end{itemize}
+
+\subsection{Denoising Score Matching (DSM)}
+
+\begin{itemize}
+\item We define the following denoising score matching (DSM) objective
+\begin{align*}
+\DSM(\theta) = \EE_{q_\sigma(\tilde{x},x)} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) - \frac{\partial q_\sigma(\tilde{x} \mid x)}{\partial x} \right\|^2 \right].
+\end{align*}
+\item The underlying intuition is that following the gradient $\Psi$ of the log-density at some corrupted point $\tilde{x}$ should ideally move us towards the clean sample $x$.
+\item In other words, the model $p(x;\theta)$ should assign higher likelihood to $x$ than $\tilde{x}$.
+\item Indeed, with the considered Gaussian kernel we have
+\begin{align*}
+\frac{\partial \log q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}} = \frac{1}{\sigma^2} (x - \tilde{x})
+\end{align*}
+and this direction corresponds to moving from $\tilde{x}$ back towards clean sample $x$.
+\item We observe that
+\begin{align*}
+\ESMP \cong \DSM.
+\end{align*}
+\item Also, for an appropriate choice of $p(x;\theta)$,
+\begin{align*}
+\DSM \cong \DAE.
+\end{align*}
+\end{itemize}
+
+\newpage
+
+
+\textbf{Proposition 1.}
+\begin{align*}
+\ESMP \cong \DSM
+\end{align*}
+
+\begin{proof}
+Observe that
+\begin{align*}
+\ESMP(\theta) &= \EE_{q_\sigma(\tilde{x})} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) - \frac{\partial \log q_\sigma(\tilde{x})}{\partial \tilde{x}} \right\|^2 \right] \\
+&= \EE_{q_\sigma(\tilde{x})} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) \right\|^2 \right] - \EE_{q_\sigma(\tilde{x})} \left[ \inner{\Psi(\tilde{x};\theta)}{\frac{\partial \log q_\sigma(\tilde{x})}{\partial \tilde{x}}} \right] + C_1
+\end{align*}
+for a constant $C_1$ independent of $\theta$. We also have
+\begin{align*}
+\EE_{q_\sigma(\tilde{x})} \left[ \inner{\Psi(\tilde{x};\theta)}{\frac{\partial \log q_\sigma(\tilde{x})}{\partial \tilde{x}}} \right] &= \int_{\tilde{x}} q_\sigma(\tilde{x}) \inner{\Psi(\tilde{x};\theta)}{\frac{\partial \log q_\sigma(\tilde{x})}{\partial \tilde{x}}} \, d\tilde{x} \\
+&= \int_{\tilde{x}} \inner{\Psi(\tilde{x};\theta)}{\frac{\partial}{\partial \tilde{x}} q_\sigma(\tilde{x})} \, d\tilde{x} \\
+&= \int_{\tilde{x}} \inner{\Psi(\tilde{x};\theta)}{\frac{\partial}{\partial \tilde{x}} \int_x q_0(x) q_\sigma(\tilde{x} \mid x) \, dx} \, d\tilde{x} \\
+&= \int_{\tilde{x}} \inner{\Psi(\tilde{x};\theta)}{\int_x q_0(x) \frac{\partial q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}} \, dx} \, d\tilde{x} \\
+&= \int_{\tilde{x}} \inner{\Psi(\tilde{x};\theta)}{\int_x q_0(x) q_\sigma(\tilde{x} \mid x) \frac{\partial \log q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}} \, dx} \, d\tilde{x} \\
+&= \int_{\tilde{x}} \int_x q_0(x) q_\sigma(\tilde{x} \mid x) \inner{\Psi(\tilde{x};\theta)}{\frac{\partial \log q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}}}  \, dx \, d\tilde{x} \\
+&= \int_{\tilde{x}} \int_x q_\sigma(\tilde{x},x) \inner{\Psi(\tilde{x};\theta)}{\frac{\partial \log q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}}}  \, dx \, d\tilde{x} \\
+&= \EE_{q_\sigma(\tilde{x},x)} \left[ \inner{\Psi(\tilde{x};\theta)}{\frac{\partial \log q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}}} \right].
+\end{align*}
+This shows that
+\begin{align*}
+\ESMP(\theta) &= \EE_{q_\sigma(\tilde{x})} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) \right\|^2 \right] - \EE_{q_\sigma(\tilde{x})} \left[ \inner{\Psi(\tilde{x};\theta)}{\frac{\partial \log q_\sigma(\tilde{x})}{\partial \tilde{x}}} \right] + C_1 \\
+&= \EE_{q_\sigma(\tilde{x},x)} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) \right\|^2 \right] - \EE_{q_\sigma(\tilde{x},x)} \left[ \inner{\Psi(\tilde{x};\theta)}{\frac{\partial \log q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}}} \right] + C_1 \\
+&= \EE_{q_\sigma(\tilde{x},x)} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) - \frac{\partial q_\sigma(\tilde{x} \mid x)}{\partial x} \right\|^2 \right] - \EE_{q_\sigma(\tilde{x},x)} \left[ \frac{1}{2} \left\| \frac{\partial q_\sigma(\tilde{x} \mid x)}{\partial x} \right\|^2 \right] + C_1 \\
+&= \DSM(\theta) + C_1 - C_2
+\end{align*}
+where $C_2$ is another constant independent of $\theta$. This proves
+\begin{align*}
+\ESMP \cong \DSM.
+\end{align*}
+\end{proof}
+
+\newpage
+
+\textbf{Proposition 2.}
+\begin{align*}
+\DSM \cong \DAE
+\end{align*}
+
+\begin{proof}
+We choose
+\begin{align*}
+p(x;\theta) = \frac{1}{Z(\theta)} \exp(-E(x;\theta))
+\end{align*}
+where for $\theta = \{W,b,c\}$,
+\begin{align*}
+E(x;\theta) = - \frac{\inner{c}{x} - \frac{1}{2} \|x\|^2 + \sum_i \softplus(\inner{W_i}{x} + b_i)}{\sigma^2}.
+\end{align*}
+We then have
+\begin{align*}
+\Psi_j(x;\theta) &= \frac{\partial \log p(x;\theta)}{\partial x_j} \\
+&= - \frac{\partial E(x;\theta)}{\partial x_j} \\
+&= \frac{1}{\sigma^2} \left( c_j - x_j + \sum_i \softplus'(\inner{W_i}{x} + b_i) \frac{\partial (\inner{W_i}{x} + b_i)}{\partial x_j} \right) \\
+&= \frac{1}{\sigma^2} \left( c_j - x_j + \sum_i \sigmoid(\inner{W_i}{x} + b_i) W_{ij} \right) \\
+&= \frac{1}{\sigma^2} (c_j - x_j + \inner{W_{\cdot,j}}{\sigmoid(Wx + b)})
+\end{align*}
+which we can write as the single equation
+\begin{align*}
+\Psi(x;\theta) = \frac{1}{\sigma^2}(W^\top \sigmoid(Wx + b) + c - x).
+\end{align*}
+It follows that
+\begin{align*}
+\DSM(\theta) &= \EE_{q_\sigma(\tilde{x},x)} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) - \frac{\partial q_\sigma(\tilde{x} \mid x)}{\partial x} \right\|^2 \right] \\
+&= \EE_{q_\sigma(\tilde{x},x)} \left[ \frac{1}{2} \left\| \frac{1}{\sigma^2}(W^\top \sigmoid(Wx + b) + c - x) - \frac{1}{\sigma^2} (x - \tilde{x}) \right\|^2 \right] \\
+&= \frac{1}{2\sigma^4} \EE_{q_\sigma(\tilde{x},x)} \left[ \|W^\top \sigmoid(W\tilde{x} + b) + c - x \|^2 \right] \\
+&= \frac{1}{2\sigma^4} \DAE(\theta)
+\end{align*}
+and so
+\begin{align*}
+\DSM \cong \DAE.
+\end{align*}
+\end{proof}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
