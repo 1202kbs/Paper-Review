@@ -213,13 +213,88 @@ d_t = -d|_{f_{\theta(t)}}.
 \end{align*}
 \end{itemize}
 
+\newpage
 
+\appendix
 
+\section{Appendix}
 
+\subsection{Asymptotics at Initialization}
 
+\subsection{Asymptotics During Training}
 
+Given a training direction $t \mapsto d_t \in \FF$, a neural network is trained in the following manner: the parameters $\theta_p$ are initialized as i.i.d. $\NN(0,1)$ and follow the differential equation
+\begin{align*}
+\partial_t \theta_p(t) = \inner{\partial_{\theta_p} F^\paran{L}(\theta(t))}{d_t}_\pin.
+\end{align*}
 
+\textbf{Theorem 2.} \textit{Assume that $\sigma$ is a Lipschitz twice differentiable nonlinearity function, with bounded second derivative. For any $T$ such that the integral $\int_0^T \|d_t\|_\pin \, dt$ stays stochastically bounded, as $n_1, \ldots, n_{L - 1} \rightarrow \infty$ sequentially, we have, uniformly for $t \in [0,T]$,
+\begin{align*}
+\Theta^\paran{L}(t) \rightarrow \Theta^\paran{L}_\infty \otimes Id_{n_L}.
+\end{align*}
+As a consequence, in this limit, the dynamics of $f_\theta$ is described by the differential equation
+\begin{align*}
+\partial_t f_{\theta(t)} = \Phi_{\Theta^\paran{L}_\infty \otimes Id_{n_L}} \left( \inner{d_t}{\cdot}_\pin \right).
+\end{align*}}
 
+\begin{proof}
+Let $\tilde{\theta}$ be the parameters of the smaller network, and let $\theta_p \in \tilde{\theta}$. Then
+\begin{align*}
+\partial_{\theta_p} F^\paran{L + 1}(\theta) &= \partial_{\theta_p} \left( \frac{1}{\sqrt{n_L}} W^\paran{L} \sigma( F^\paran{L}(\tilde{\theta}) ) + \beta b^\paran{L} \right) \\
+&= \frac{1}{\sqrt{n_L}} W^\paran{L} \dot{\sigma}( F^\paran{L}(\tilde{\theta}) ) \partial_{\theta_p} F^\paran{L}(\tilde{\theta})
+\end{align*}
+and so
+\begin{align*}
+\partial_t \theta_p(t) &= \inner{\partial_{\theta_p} F^\paran{L}(\theta(t))}{d_t}_\pin \\
+&= \inner{\frac{1}{\sqrt{n_L}} W^\paran{L}(t) \dot{\sigma}( F^\paran{L}(\tilde{\theta}(t)) ) \partial_{\theta_p} F^\paran{L}(\tilde{\theta}(t))}{d_t}_\pin \\
+&= \inner{\partial_{\theta_p} F^\paran{L}(\tilde{\theta}(t))}{\dot{\sigma}( F^\paran{L}(\tilde{\theta}(t)) ) \left( \frac{1}{\sqrt{n_L}} W^\paran{L}(t) \right)^\top d_t}
+\end{align*}
+which implies that the smaller network follows the training direction
+\begin{align*}
+d_t' = \dot{\sigma}( F^\paran{L}(\tilde{\theta}(t)) ) \left( \frac{1}{\sqrt{n_L}} W^\paran{L}(t) \right)^\top d_t.
+\end{align*}
+Since $\sigma$ is a $c$-Lipschitz function, $|\dot{\sigma}| \leq c$ and so
+\begin{align*}
+\|d_t'\|_\pin &\leq |\dot{\sigma}( F^\paran{L}(\tilde{\theta}(t)) )| \left\| \frac{1}{\sqrt{n_L}} W^\paran{L}(t) \right\|_{op} \|d_t\|_\pin \\
+&\leq c \left\| \frac{1}{\sqrt{n_L}} W^\paran{L}(t) \right\|_{op} \|d_t\|_\pin.
+\end{align*}
+
+From the law of large numbers,
+\begin{align*}
+\left\| \frac{1}{\sqrt{n_L}} W^\paran{L}_i(0) \right\|_2^2 &= \frac{1}{n_L} \sum_{j = 1}^{n_L} W_{ij}^2(0) \rightarrow \EE[W_{ij}^2(0)] = 1
+\end{align*}
+since $W_{ij}(0)$ are i.i.d. samples from $\NN(0,1)$. Hence, $\|\frac{1}{\sqrt{n_L}} W^\paran{L}(0)\|_{op}$ is bounded.
+
+Observe that by the triangle inequality,
+\begin{align*}
+\partial_t \|f(t)\| = \lim_{h \rightarrow 0} \frac{\|f(t + h)\| - \|f(t)\|}{h} \leq \lim_{h \rightarrow 0} \frac{\|f(t + h) - f(t)\|}{h} = \| \partial_t f(t)\|
+\end{align*}
+and so $\partial_t \|\cdot\| \leq \| \partial_t \cdot \|$. It follows that
+\begin{align*}
+\partial_t \left\| W_i^\paran{L}(t) - W_i^\paran{L}(0) \right\|_2 &\leq \left\| \partial_t \left( W_i^\paran{L}(t) - W_i^\paran{L}(0) \right) \right\|_2 \\
+&= \left\| \partial_t W_i^\paran{L}(t) \right\|_2 \\
+&\leq \frac{1}{\sqrt{n_L}} \| \alpha_i^\paran{L}(t) \|_\pin \|d_t\|_\pin.
+\end{align*}
+
+\begin{align*}
+\partial_t \left( c \left\| \tilde{\alpha}^\paran{L}_i(t) - \tilde{\alpha}^\paran{L}_i(0) \right\|_\pin + \left\| W^\paran{L}_i(t) - W^\paran{L}_i(0) \right\|_2 \right) = \partial_t( A(t) - A(0) ) = \partial_t A(t) = O\left(\frac{1}{\sqrt{n_L}}\right).
+\end{align*}
+
+\begin{align*}
+\partial_{W^\paran{L}_{ij}} f_{\theta(t),j'}(x) \otimes \partial_{W^\paran{L}_{ij}} f_{\theta(t),j''}(x') = \frac{1}{n_L} \alpha^\paran{L}_i(x;\theta(t))^2 \delta_{jj'} \delta_{jj''}
+\end{align*}
+and so
+\begin{align*}
+\partial_t \left( \partial_{W^\paran{L}_{ij}} f_{\theta(t),j'}(x) \otimes \partial_{W^\paran{L}_{ij}} f_{\theta(t),j''}(x') \right) = \frac{2}{n_L} \partial_t \alpha^\paran{L}_i(x;\theta(t)) \delta_{jj'} \delta_{jj''}
+\end{align*}
+and since $|\partial_t \alpha^\paran{L}_i| = O(\frac{1}{\sqrt{n_L}})$, we see that the summands vary at the rant $n_L^{-3/2}$. Since the dimension of $W^\paran{L}$ is $n_L \times n_{L + 1}$ (recall that $n_{L + 1}$ is fixed), the sum induces a variation of the NTK of rate $\frac{1}{\sqrt{n_L}}$.
+\end{proof}
+
+\newpage
+
+\subsection{A Priori Control During Training}
+
+\subsection{Positive-Definiteness of $\Theta^\paran{L}_\infty$}
 
 
 
