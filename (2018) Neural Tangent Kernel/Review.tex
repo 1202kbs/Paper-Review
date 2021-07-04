@@ -1,0 +1,251 @@
+\documentclass[10pt]{article}
+
+\usepackage{mathtools}
+\usepackage{fullpage}
+\usepackage{latexsym}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{mathrsfs}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{bm}
+
+\newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\EE}{\mathbb{E}}
+
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\FF}{\mathcal{F}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KK}{\mathcal{K}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\NN}{\mathcal{N}}
+\newcommand{\OO}{\mathcal{O}}
+
+\newcommand{\inner}[2]{\left\langle #1, #2 \right\rangle}
+\newcommand{\paran}[1]{{( #1 )}}
+\newcommand{\pin}{{p^{in}}}
+\newcommand{\din}{\partial^{in}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\title{Paper Review: Neural Tangent Kernel}
+\author{Beomsu Kim\footnote{Department of Mathematical Sciences, KAIST. Email \texttt{beomsu.kim@kaist.ac.kr}}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Paper Information.}
+
+\begin{itemize}
+\item Arthur Jacot, Franck Gabriel, and Cl\'{e}ment Hongler. Neural Tangent Kernel. \newline In \underline{Neural Information Processing Systems}, 2018.
+\end{itemize}
+
+\section{Introduction}
+
+\section{Neural Networks}
+
+\begin{itemize}
+\item We consider fully-connected ANNs with layers numbered from $0$ (input) to $L$ (output).
+\item $n_l$ : number of neurons in layer $l$.
+\item $\sigma : \RR \rightarrow \RR$ : Lipschitz, twice differentiable nonlinearity function, with bounded second derivative.
+\item $\theta$ : weights $W^\paran{l} \in \RR^{n_l \times n_{l + 1}}$ and bias vectors $b^\paran{l} \in \RR^{n_l + 1}$. Initialized as i.i.d. Gaussians $\NN(0,1)$.
+\item $P = \sum_{l = 0}^{L - 1} (n_l + 1) n_{l + 1}$ : number of parameters.
+\item $\FF = \{f : \RR^{n_0} \rightarrow \RR^{n_L}\}$ : space of functions.
+\item $F^\paran{L} : \RR^P \rightarrow \FF$ : ANN realization function, mapping parameters to the functions $f_\theta \in \FF$.
+\item $\pin = \sum_{i = 1}^N \delta_{x_i}$ : input distribution.
+\item $\inner{f}{g}_{\pin} = \EE_{x \sim \pin} [f(x)^\top g(x)]$ : bilinear form defined on $\pin$.
+\item $\| f \|_{\pin} = \inner{f}{f}_{\pin}$ : seminorm defined on $\pin$.
+\item Define the functions
+\begin{align*}
+\alpha^\paran{0}(x;\theta) &= x, \\
+\tilde{\alpha}^\paran{l + 1}(x;\theta) &= \frac{1}{\sqrt{n_l}} W^\paran{l} \alpha^\paran{l}(x;\theta) + \beta b^\paran{l}, \\
+\alpha^\paran{l}(x;\theta) &= \sigma(\tilde{\alpha}^\paran{l}(x;\theta)), \\
+f_\theta(x) &= \tilde{\alpha}^\paran{L}(x;\theta).
+\end{align*}
+\end{itemize}
+
+\newpage
+
+\section{Kernel Gradient}
+
+\begin{itemize}
+\item $C : \FF \rightarrow \RR$ : functional cost.
+\item $K : \RR^{n_0 \times n_0} \rightarrow \RR^{n_L \times n_L}$ : multi-dimensional kernel which satisfies $K(x,x') = K(x',x)^\top$.
+\item $\inner{f}{g}_K = \EE_{x,x' \sim \pin} [f(x)^\top K(x,x') g(x')]$ : inner product w.r.t. kernel $K$.
+\item The kernel $K$ is positive definite w.r.t. $\|\cdot\|_{\pin}$ if $\|f\|_{\pin} > 0 \implies \|f\|_K > 0$.
+\item $\FF^* = \{ \mu = \inner{d}{\cdot}_{\pin} : d \in \FF \}$ : the dual space of $\FF$.
+\item $\Phi_K : \FF^* \rightarrow \FF$ is defined such that
+\begin{align*}
+\Phi_K : \inner{d}{\cdot}_{\pin} \mapsto \frac{1}{N} \sum_{i = 1}^N K(\cdot,x_i) d(x_i).
+\end{align*}
+$\Phi_K$ can be interpreted as a map which interpolates $d$ using the kernel $K$.
+\item $\din_f C|_{f_0} = \inner{d|_{f_0}}{\cdot}_{\pin}$ : functional derivative of $C$ at a point $f_0 \in \FF$.
+\item $\nabla_K C|_{f_0} = \Phi_K(\din_f C|_{f_0})$ : kernel gradient.
+\item In contrast to $\din_f C$ which is only defined on the dataset, the kernel gradient generalizes to values $x$ outside the dataset thanks to the kernel $K$.
+\item A time-dependent function $f(t)$ follows the kernel gradient descent w.r.t. $K$ if it satisfies
+\begin{align*}
+\partial_t f(t) = -\nabla_K C|_{f(t)} = - \Phi_K(\din_f C|_{f(t)}) = -\frac{1}{N} \sum_{i = 1}^N K(\cdot,x_i) d|_{f(t)}(x_i).
+\end{align*}
+\item During kernel gradient descent, the cost $C(f(t))$ evolves as
+\begin{align*}
+\partial_t C|_{f(t)} = \partial_t C(f(t)) &= \din_f C|_{f(t)}(\partial_t f(t)) \\
+&= \inner{d|_{f(t)}}{\partial_t f(t)}_{\pin} \\
+&= \inner{d|_{f(t)}}{-\frac{1}{N} \sum_{i = 1}^N K(\cdot,x_i) d|_{f(t)}(x_i)}_\pin \\
+&= \frac{1}{N} \sum_{j = 1}^N d|_{f(t)}(x_j)^\top \left( -\frac{1}{N} \sum_{i = 1}^N K(x_j,x_i) d|_{f(t)}(x_i) \right) \\
+&= -\frac{1}{N^2} \sum_{j = 1}^N \sum_{i = 1}^N d|_{f(t)}(x_j)^\top K(x_j,x_i) d|_{f(t)}(x_i) \\
+&= - \EE_{x,x' \sim \pin} [d|_{f(t)}(x)^\top K(x,x') d|_{f(t)}(x')] \\
+&= - \| d|_{f(t)} \|_K^2.
+\end{align*}
+Convergence to a critical point of $C$ is hence guaranteed if the kernel $K$ is positive definite with respect to $\|\cdot\|_{\pin}$ : the cost is then strictly decreasing except at points such that $\|d|_{f(t)}\|_{\pin} = 0$. If the cost is convex and bounded from below, the function $f(t)$ therefore converges to a global minimum as $t \rightarrow \infty$.
+\end{itemize}
+
+\newpage
+
+\subsection{Random Functions Approximation}
+
+\begin{itemize}
+\item A kernel $K$ can be approximated by a choice of $P$ random functions $f^\paran{p}$ sampled independently from any distribution on $\FF$ whose (non-centered) covariance is given by the kernel $K$:
+\begin{align*}
+\EE [f^\paran{p}(x) f^\paran{p}(x')^\top] = K(x,x')
+\end{align*}
+or equivalently,
+\begin{align*}
+\EE [f^\paran{p}_k(x) f^\paran{p}_{k'}(x')] = K_{kk'}(x,x').
+\end{align*}
+\item These functions define a random linear parametrization
+\begin{align*}
+F^{lin} : \RR^P \rightarrow \FF : \theta \mapsto f^{lin}_\theta = \frac{1}{\sqrt{P}} \sum_{p = 1}^P \theta_p f^\paran{p}.
+\end{align*}
+\item The partial derivatives of the parametrization are given by ($e_p$ is the $p$-th standard basis vector)
+\begin{align*}
+\partial_{\theta_p} F^{lin}(\theta) = \lim_{h \rightarrow 0} \frac{F^{lin}(\theta + h e_p) - F^{lin}(\theta)}{h} = \frac{1}{\sqrt{P}} f^\paran{p}.
+\end{align*}
+\item Optimizing the cost $C \circ F^{lin}$ through gradient descent, the parameters follow the ODE
+\begin{align*}
+\partial_t \theta_p(t) = -\partial_{\theta_p} (C \circ F^{lin})(\theta(t)) &= -\partial_{\theta_p} C(f^{lin}_{\theta(t)}) \\
+&= - \din_f C|_{f^{lin}_{\theta(t)}}(\partial_{\theta_p} f^{lin}_{\theta(t)}) \\
+&= -\frac{1}{\sqrt{P}} \din_f C|_{f^{lin}_{\theta(t)}}(f^\paran{p}) = -\frac{1}{\sqrt{P}} \inner{d|_{f^{lin}_{\theta(t)}}}{f^\paran{p}}_\pin.
+\end{align*}
+The first equality holds since we are performing gradient descent, i.e., the instantaneous change of $\theta_p$ at time $t$ must equal the gradient of $\theta_p$ w.r.t. the cost at time $t$.
+\item As a result, the function $f^{lin}_{\theta(t)}$ evolves according to
+\begin{align*}
+\partial_t f^{lin}_{\theta(t)} = \partial_t \left( \frac{1}{\sqrt{P}} \sum_{p = 1}^P \theta_p(t) f^\paran{p} \right) &= \frac{1}{\sqrt{P}} \sum_{p = 1}^P \partial_t \theta_p(t) f^\paran{p} \\
+&= -\frac{1}{P} \sum_{p = 1}^P \inner{d|_{f^{lin}_{\theta(t)}}}{f^\paran{p}}_{\pin} f^\paran{p} \\
+&= -\frac{1}{P} \sum_{p = 1}^P \frac{1}{N} \sum_{i = 1}^N d|_{f^{lin}_{\theta(t)}}(x_i)^\top f^\paran{p}(x_i) f^\paran{p}(\cdot) \\
+&= -\frac{1}{P} \sum_{p = 1}^P \frac{1}{N} \sum_{i = 1}^N (f^\paran{p} \otimes f^\paran{p})(\cdot,x_i) d|_{f^{lin}_{\theta(t)}}(x_i) \\
+&= -\frac{1}{N} \sum_{i = 1}^N \left( \frac{1}{P} \sum_{p = 1}^P f^\paran{p} \otimes f^\paran{p} \right)(\cdot,x_i) d|_{f^{lin}_{\theta(t)}}(x_i) \\
+&= -\Phi_{\tilde{K}}(\din_f C|_{f^{lin}_{\theta(t)}}) \\
+&= -\nabla_{\tilde{K}} C|_{f^{lin}_{\theta(t)}}
+\end{align*}
+where
+\begin{align*}
+\tilde{K} = \sum_{p = 1}^P \partial_{\theta_p} F^{lin}(\theta) \otimes \partial_{\theta_p} F^{lin}(\theta) = \frac{1}{P} \sum_{p = 1}^P f^\paran{p} \otimes f^\paran{p}.
+\end{align*}
+\item This is a random $n_L$-dimensional kernel with values
+\begin{align*}
+\tilde{K}_{ii'}(x,x') = \frac{1}{P} \sum_{p = 1}^P f^\paran{p}_i(x) f^\paran{p}_{i'}(x').
+\end{align*}
+\item Performing gradient descent on the cost $C \circ F^{lin}$ is therefore equivalent to performing kernel gradient descent with the tangent kernel $\tilde{K}$ in the function space.
+\item With $P \rightarrow \infty$, by the law of large numbers, the random kernel $\tilde{K}$ tends to the fixed kernel $K$.
+\begin{align*}
+\lim_{P \rightarrow \infty} \tilde{K}_{ii'}(x,x') = \lim_{P \rightarrow \infty} \frac{1}{P} \sum_{p = 1}^P f^\paran{p}_i(x) f^\paran{p}_{i'}(x') = \EE[f^\paran{p}_i(x) f^\paran{p}_{i'}(x')] = K_{ii'}(x,x').
+\end{align*}
+Hence, this method approximates kernel gradient descent with respect to the limiting kernel $K$.
+\end{itemize}
+
+\newpage
+
+\section{Neural Tangent Kernel}
+
+\begin{itemize}
+\item During training, the network function $f_\theta$ evolves along the negative kernel gradient
+\begin{align*}
+\partial_t f_{\theta(t)} = -\nabla_{\Theta^\paran{L}} C|_{f_{\theta(t)}}
+\end{align*}
+with respect to the neural tangent kernel (NTK)
+\begin{align*}
+\Theta^\paran{L}(\theta) = \sum_{p = 1}^P \partial_{\theta_p} F^\paran{L}(\theta) \otimes \partial_{\theta_p} F^\paran{L}(\theta).
+\end{align*}
+This can be derived by following the steps in Section 3.1 with $F^\paran{L}$ in place of $F^{lin}$.
+\item However, in contrast to $F^{lin}$, the realization function $F^\paran{L}$ of ANNs is not linear.
+\item As a consequence, the derivatives $\partial_{\theta_p} F^\paran{L}(\theta)$ and the NTK depend on the parameters $\theta$.
+\end{itemize}
+
+\subsection{Initialization}
+
+\begin{itemize}
+\item The first key result is that in the limit $n_1, \ldots, n_{L - 1} \rightarrow \infty$, the NTK converges in probability to a deterministic limiting kernel.
+\end{itemize}
+
+\subsection{Training}
+
+\begin{itemize}
+\item The second key result is that the NTK stays asymptotically constant during training.
+\item In general, the parameters can be updated according to a training direction $d_t \in \FF$.
+\begin{align*}
+\partial_t \theta_p(t) = \inner{\partial_{\theta_p} F^\paran{L}(\theta(t))}{d_t}_\pin
+\end{align*}
+\item In the case of gradient descent,
+\begin{align*}
+\partial_t \theta_p(t) = -\partial_{\theta_p}(C \circ F^\paran{L})(\theta(t)) &= -\partial_{\theta_p} C(f_{\theta(t)}) \\
+&= -\din_f C|_{f_{\theta(t)}}(\partial_{\theta_p} f_{\theta(t)}) \\
+&=  \inner{\partial_{\theta_p} f_{\theta(t)}}{-d|_{f_{\theta(t)}}}_\pin \\
+&= \inner{\partial_{\theta_p} F^\paran{L}(\theta(t))}{-d|_{f_{\theta(t)}}}_\pin
+\end{align*}
+and so
+\begin{align*}
+d_t = -d|_{f_{\theta(t)}}.
+\end{align*}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
