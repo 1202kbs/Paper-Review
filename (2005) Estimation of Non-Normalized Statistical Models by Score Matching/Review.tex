@@ -93,7 +93,7 @@ where the calculation of $Z(\bm{\theta})$ is intractable, even by numerical meth
 We call this the score function, although according to the conventional definition, it is actually the gradient with respect the parameters.
 \item Observe that
 \begin{align}
-\Psi(\xi;\bm{\theta}) = \nabla_\xi \log q(\xi;\bm{\theta}). \label{eq:1}
+\Psi(\xi;\bm{\theta}) = \nabla_\xi \log p(\xi;\bm{\theta}) = \nabla_\xi \log q(x;\bm{\theta}) - \nabla_\xi \log Z(\bm{\theta}) = \nabla_\xi \log q(\xi;\bm{\theta}). \label{eq:1}
 \end{align}
 \item Likewise, we denote by
 \begin{align*}
@@ -134,13 +134,14 @@ J(\bm{\theta}) = \int_{\xi \in \RR^n} p_\mathbf{x}(\xi) \sum_{i = 1}^n \left[ \p
 \begin{proof}
 Definition \eqref{eq:2} gives
 \begin{align*}
-J(\bm{\theta}) = \int p_\mathbf{x}(\xi) \left[ \frac{1}{2} \|\Psi_\mathbf{x}(\xi)\|^2 + \frac{1}{2} \|\Psi(\xi;\bm{\theta})\|^2 - \Psi_\mathbf{x}(\xi)^\top \Psi(\xi;\bm{\theta}) \right] \, d\xi.
+J(\bm{\theta}) &= \int p_\mathbf{x}(\xi) \left[ \frac{1}{2} \|\Psi_\mathbf{x}(\xi)\|^2 + \frac{1}{2} \|\Psi(\xi;\bm{\theta})\|^2 - \Psi_\mathbf{x}(\xi)^\top \Psi(\xi;\bm{\theta}) \right] \, d\xi \\
+&= \int p_\mathbf{x}(\xi) \left[ \frac{1}{2} \|\Psi_\mathbf{x}(\xi)\|^2 \right] \, d\xi + \int p_\mathbf{x}(\xi) \left[ \frac{1}{2} \|\Psi(\xi;\bm{\theta})\|^2 \right] \, d\xi + \int p_\mathbf{x}(\xi) \left[ - \Psi_\mathbf{x}(\xi)^\top \Psi(\xi;\bm{\theta}) \right] \, d\xi.
 \end{align*}
-The integral of the first term in brackets does not depend on $\bm{\theta}$, so we set it as a constant $C$. Also,
+This factorization uses assumption 3. The first term is independent of $\bm{\theta}$, so we set it as a constant $C$. Also,
 \begin{align*}
 \int p_\mathbf{x}(\xi) \left[ \frac{1}{2} \| \Psi(\xi;\bm{\theta}) \|^2 \right] \, d\xi = \int p_\mathbf{x}(\xi) \sum_{i = 1}^n \left[ \frac{1}{2} \Psi_i(\xi;\bm{\theta})^2 \right] \, d\xi
 \end{align*}
-Finally,
+Finally, by assumptions 1, 2, and 4,
 \begin{align*}
 &\int p_\mathbf{x}(\xi) \left[ - \Psi_\mathbf{x}(\xi)^\top \Psi(\xi;\bm{\theta}) \right] \, d\xi \\
 &= \int p_\mathbf{x}(\xi) \sum_{i = 1}^n \left[ -\frac{\partial \log p_\mathbf{x}(\xi)}{\partial \xi_i} \cdot \Psi_i(\xi;\bm{\theta}) \right] \, d\xi \\
@@ -148,10 +149,8 @@ Finally,
 &= -\sum_{i = 1}^n \left[ \lim_{\xi_i \rightarrow \infty} p_\mathbf{x}(\xi) \cdot \Psi_i(\xi;\bm{\theta}) - \lim_{\xi_i \rightarrow -\infty} p_\mathbf{x}(\xi) \cdot \Psi_i(\xi;\bm{\theta}) \right] + \int \sum_{i = 1}^n p_\mathbf{x}(\xi) \cdot \partial_i \Psi_i(\xi;\bm{\theta}) \, d\xi \\
 &= \int p_\mathbf{x}(\xi) \sum_{i = 1}^n \partial_i \Psi_i(\xi;\bm{\theta}) \, d\xi
 \end{align*}
-by integration by parts. This concludes the proof.
+using integration by parts. This concludes the proof.
 \end{proof}
-
-\newpage
 
 \begin{itemize}
 \item In practice, we have $T$ observations of the random vector $\mathbf{x}$, denoted by $\mathbf{x}(1), \ldots, \mathbf{x}(T)$. The sample version of $J$ is obvious obtained from \eqref{eq:3} as
@@ -160,6 +159,8 @@ by integration by parts. This concludes the proof.
 \end{align}
 which is asymptotically equivalent to $J$ due to the law of large numbers.
 \end{itemize}
+
+\newpage
 
 \textbf{Theorem 2} \textit{Assume that
 \begin{enumerate}

@@ -172,7 +172,7 @@ p(x;\theta) = \frac{1}{Z(\theta)} \exp(-E(x;\theta)), \qquad Z(\theta) = \int_x 
 \DSM(\theta) = \EE_{q_\sigma(\tilde{x},x)} \left[ \frac{1}{2} \left\| \Psi(\tilde{x};\theta) - \frac{\partial q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}} \right\|^2 \right].
 \end{align*}
 \item The underlying intuition is that following the gradient $\Psi$ of the log-density at some corrupted point $\tilde{x}$ should ideally move us towards the clean sample $x$.
-\item In other words, the model $p(x;\theta)$ should assign higher likelihood to $x$ than $\tilde{x}$.
+\item In other words, the model $p(x;\theta)$ should assign higher density to $x$ than $\tilde{x}$.
 \item Indeed, with the considered Gaussian kernel we have
 \begin{align*}
 \frac{\partial \log q_\sigma(\tilde{x} \mid x)}{\partial \tilde{x}} = \frac{1}{\sigma^2} (x - \tilde{x})
