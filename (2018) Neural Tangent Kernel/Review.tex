@@ -36,6 +36,7 @@
 \newcommand{\paran}[1]{{( #1 )}}
 \newcommand{\pin}{{p^{in}}}
 \newcommand{\din}{\partial^{in}}
+\newcommand{\op}{{op}}
 
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator*{\argmin}{arg\,min}
@@ -69,7 +70,7 @@
 \item $F^\paran{L} : \RR^P \rightarrow \FF$ : ANN realization function, mapping parameters to the functions $f_\theta \in \FF$.
 \item $\pin = \sum_{i = 1}^N \delta_{x_i}$ : input distribution.
 \item $\inner{f}{g}_{\pin} = \EE_{x \sim \pin} [f(x)^\top g(x)]$ : bilinear form defined on $\pin$.
-\item $\| f \|_{\pin} = \inner{f}{f}_{\pin}$ : seminorm defined on $\pin$.
+\item $\| f \|_{\pin} = \inner{f}{f}_{\pin}^{1/2}$ : seminorm defined on $\pin$.
 \item Define the functions
 \begin{align*}
 \alpha^\paran{0}(x;\theta) &= x, \\
@@ -168,8 +169,6 @@ where
 Hence, this method approximates kernel gradient descent with respect to the limiting kernel $K$.
 \end{itemize}
 
-\newpage
-
 \section{Neural Tangent Kernel}
 
 \begin{itemize}
@@ -213,13 +212,43 @@ d_t = -d|_{f_{\theta(t)}}.
 \end{align*}
 \end{itemize}
 
-\newpage
-
 \appendix
 
 \section{Appendix}
 
+\begin{itemize}
+\item We study the limit of the NTK as $n_1, \ldots, n_{L - 1} \rightarrow \infty$ sequentially. That is, we first take $n_1 \rightarrow \infty$, then $n_2 \rightarrow \infty$, and so on. This leads to much simpler proofs, but our results could in principle by strengthened to the more general setting when $\min(n_1, \ldots, n_{L - 1}) \rightarrow \infty$.
+\item A natural choice of convergence to study the NTK is w.r.t. the operator norm on kernels
+\begin{align*}
+\|K\|_\op = \max_{\|f\|_\pin \leq 1} \|f\|_K = \max_{\|f\|_\pin \leq 1} \sqrt{\EE_{x,x' \sim \pin}[f(x)^\top K(x,x') f(x')]}.
+\end{align*}
+\item Define
+\begin{align*}
+\mathbf{f} \coloneqq (f(x_1), \ldots, f(x_N)) \in \RR^{Nn_L}, \qquad \mathbf{K} \coloneqq (K_{kk'}(x_i,x_j))_{k,k' < n_L, i,j < N} \in \RR^{Nn_L \times Nn_L}.
+\end{align*}
+We then have
+\begin{align*}
+\| f \|_\pin^2 = \inner{f}{f}_\pin = \EE_{x \sim \pin} [ \|f(x)\|^2_2 ] = \frac{1}{N} \sum_{i = 1}^N \|f(x_i)\|^2_2 = \frac{1}{N} \| (f(x_1), \ldots, f(x_N)) \|^2 = \frac{1}{N} \|\mathbf{f}\|^2_2.
+\end{align*}
+Also, note that
+\begin{align*}
+\EE_{x,x'}[f(x)^\top K(x,x') f(x')] &= \frac{1}{N^2} \sum_{i = 1}^N \sum_{j = 1}^N f(x_i)^\top K(x_i,x_j) f(x_j) = \frac{1}{N^2} \mathbf{f}^\top \mathbf{K} \mathbf{f}
+\end{align*}
+and so
+\begin{align*}
+\|K\|_\op = \frac{1}{N} \max_{\|\mathbf{f}\|_2 \leq \sqrt{N}} \sqrt{\mathbf{f}^\top \mathbf{K} \mathbf{f}} = \frac{1}{\sqrt{N}} \max_{\|\mathbf{f}\|_2 \leq 1} \sqrt{\mathbf{f}^\top \mathbf{K} \mathbf{f}} 
+\end{align*}
+Hence, $\|K\|_\op$ is equal to the (scaled) leading eigenvalue of the $Nn_L \times Nn_L$ Gram matrix $\mathbf{K}$.
+\end{itemize}
+
 \subsection{Asymptotics at Initialization}
+
+\textbf{Proposition 1.} \textit{For a network of depth $L$ at initialization, with a Lipschitz nonlinearity $\sigma$, and in the limit as $n_1, \ldots, n_{L - 1} \rightarrow \infty$ sequentially, the output functions $f_{\theta,k}$, for $k = 1, \ldots, n_L$, tend (in law) to i.i.d. centered Gaussian processes of covariance $\Sigma^\paran{L}$, where $\Sigma^\paran{L}$ is defined recursively by
+\begin{align*}
+\Sigma^\paran{1}(x,x') &= \frac{1}{n_0} x^\top x' + \beta^2, \\
+\Sigma^\paran{L + 1}(x,x') &= \EE_f [\sigma(f(x)) \sigma(f(x'))] + \beta^2
+\end{align*}
+taking the expectation with respect to a centered Gaussian process $f$ of covariance $\Sigma^\paran{L}$.}
 
 \subsection{Asymptotics During Training}
 
