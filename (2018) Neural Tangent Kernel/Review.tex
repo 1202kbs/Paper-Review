@@ -241,14 +241,69 @@ and so
 Hence, $\|K\|_\op$ is equal to the (scaled) leading eigenvalue of the $Nn_L \times Nn_L$ Gram matrix $\mathbf{K}$.
 \end{itemize}
 
+\newpage
+
 \subsection{Asymptotics at Initialization}
 
 \textbf{Proposition 1.} \textit{For a network of depth $L$ at initialization, with a Lipschitz nonlinearity $\sigma$, and in the limit as $n_1, \ldots, n_{L - 1} \rightarrow \infty$ sequentially, the output functions $f_{\theta,k}$, for $k = 1, \ldots, n_L$, tend (in law) to i.i.d. centered Gaussian processes of covariance $\Sigma^\paran{L}$, where $\Sigma^\paran{L}$ is defined recursively by
 \begin{align*}
 \Sigma^\paran{1}(x,x') &= \frac{1}{n_0} x^\top x' + \beta^2, \\
-\Sigma^\paran{L + 1}(x,x') &= \EE_f [\sigma(f(x)) \sigma(f(x'))] + \beta^2
+\Sigma^\paran{L + 1}(x,x') &= \EE_{f \sim \NN(0,\Sigma^\paran{L})} [\sigma(f(x)) \sigma(f(x'))] + \beta^2
 \end{align*}
-taking the expectation with respect to a centered Gaussian process $f$ of covariance $\Sigma^\paran{L}$.}
+where $\NN(0,\Sigma^\paran{L})$ denotes the centered Gaussian process with covariance function $\Sigma^\paran{L}$.}
+
+\begin{proof}
+We prove the result by induction. When $L = 1$, there are no hidden layers and $f_\theta$ is a random affine function of the form
+\begin{align*}
+f_\theta(x) = \frac{1}{\sqrt{n_0}} W^\paran{0} x + \beta b^\paran{0}.
+\end{align*}
+For any index $i$, we thus have
+\begin{align*}
+\EE[f_{\theta,i}(x)] = \EE \left[ \frac{1}{\sqrt{n_0}} \sum_{j = 1}^{n_0} W^\paran{0}_{i,j} x_j + \beta b^\paran{0}_i \right] = \frac{1}{\sqrt{n_0}} \sum_{j = 1}^{n_0} \EE[ W^\paran{0}_{i,j} ] x_j + \beta \EE[ b^\paran{0}_i ] = 0
+\end{align*}
+because the parameters are initialized from $\NN(0,1)$. It follows that
+\begin{align*}
+\Sigma^\paran{1}(x,x') &= \EE[ f_{\theta,i}(x) f_{\theta,i}(x') ] - \EE[f_{\theta,i}(x)] \EE[f_{\theta,i}(x')] \\
+&= \EE[ f_{\theta,i}(x) f_{\theta,i}(x') ] \\
+&= \frac{1}{n_0} \sum_{j = 1}^{n_0} \sum_{j' = 1}^{n_0} \EE[W^\paran{0}_{i,j} W^\paran{0}_{i,j'}]x_j x_{j'}' + \frac{\beta}{\sqrt{n_0}} \sum_{j = 1}^{n_0} \EE[ W^\paran{0}_{i,j} \beta^\paran{0}_i](x_j + x_j') + \beta^2 \EE[(b^\paran{0}_i)^2] \\
+&= \frac{1}{n_0} x^\top x' + \beta^2
+\end{align*}
+which proves $f_{\theta,i} \sim \NN(0,\Sigma^\paran{1})$. This concludes the base case.
+
+The key to the induction step is to consider an $(L + 1)$-network as the following composition. An $L$-network $\RR^{n_0} \rightarrow \RR^{n_L}$ mapping the input to the pre-activations $\tilde{\alpha}^\paran{L}_i$, followed by an elementwise application of the nonlinearity $\sigma$ and then a random affine map $\RR^{n_L} \rightarrow \RR^{n_{L + 1}}$. The induction hypothesis gives in the limit as sequentially $n_1, \ldots, n_{L - 1} \rightarrow \infty$, the preactivations $\tilde{\alpha}^\paran{L}_i$ tend to i.i.d. Gaussian processes with covariance $\Sigma^\paran{L}$. Then, conditioned on $\tilde{\alpha}^\paran{L}_i \sim \NN(0,\Sigma^\paran{L})$, the outputs
+\begin{align*}
+f_{\theta,i}(x) = \frac{1}{\sqrt{n_L}} \sum_{j = 1}^{n_L} W^\paran{L}_{i,j} \sigma(\tilde{\alpha}^\paran{L}(x;\theta)) + \beta b^\paran{L}_i
+\end{align*}
+are i.i.d. centered Gaussians with covariance
+\begin{align*}
+\tilde{\Sigma}^\paran{L + 1}(x,x') = \EE[f_{\theta,i}(x) f_{\theta,i}(x')] = \frac{1}{n_L} \sigma(\tilde{\alpha}^\paran{L}(x;\theta))^\top \sigma(\tilde{\alpha}^\paran{L}(x;\theta)) + \beta^2.
+\end{align*}
+In other words, conditioned on $\tilde{\alpha}^\paran{L}_i \sim \NN(0,\Sigma^\paran{L})$, $f_{\theta,i} \sim \NN(0,\tilde{\Sigma}^\paran{L + 1})$. The proof for this is identical to the proof for the base case. Specifically, repeat the proof for the base case with $\sigma(\tilde{\alpha}^\paran{L}(x;\theta))$ in place of $x$. By the law of large numbers, as $n_L \rightarrow \infty$, this covariance tends in probability to the expectation
+\begin{align*}
+\Sigma^\paran{L + 1}(x,x') &\coloneqq \lim_{n_L \rightarrow \infty} \tilde{\Sigma}^{L + 1}(x,x') \\
+&= \lim_{n_L \rightarrow \infty} \frac{1}{n_L} \sigma(\tilde{\alpha}^\paran{L}(x;\theta))^\top \sigma(\tilde{\alpha}^\paran{L}(x;\theta)) + \beta^2 \\
+&= \lim_{n_L \rightarrow \infty} \frac{1}{n_L} \sum_{i = 1}^{n_L} \sigma(\tilde{\alpha}^\paran{L}_i(x;\theta)) \sigma(\tilde{\alpha}^\paran{L}_i(x';\theta)) + \beta^2 \\
+&= \EE_{f \sim \NN(0,\Sigma^\paran{L})}[\sigma(f(x))\sigma(f(x'))] + \beta^2
+\end{align*}
+because $\tilde{\alpha}^\paran{L}_i$ are i.i.d. samples from $\NN(0,\Sigma^\paran{L})$. In particular, the covariance is deterministic and hence independent of $\alpha^\paran{L}$. As a consequence, the conditioned and unconditioned distributions of $f_{\theta,i}$ are equal in the limit. They are i.i.d. centered Gaussian processes of covariance $\Sigma^\paran{L + 1}$. This concludes the induction step and so the proposition is proved.
+\end{proof}
+
+\textbf{Theorem 1.} \textit{For a network of depth $L$ at initialization, with a Lipschitz nonlinearity $\sigma$, and in the limit as the layers width $n_1, \ldots, n_{L - 1} \rightarrow \infty$ sequentially, the NTK $\Theta^\paran{L}$ converges in probability to a deterministic limiting kernel
+\begin{align*}
+\Theta^\paran{L} \rightarrow \Theta^\paran{L}_\infty \otimes Id_{n_L}.
+\end{align*}
+The scalar kernel $\Theta^\paran{L}_\infty : \RR^{n_0} \times \RR^{n_0} \rightarrow \RR$ is defined recursively by
+\begin{align*}
+\Theta^\paran{1}_\infty(x,x') &= \Sigma^\paran{1}(x,x') \\
+\Theta^\paran{L + 1}_\infty(x,x') &= \Theta^\paran{L}(x,x') \dot{\Sigma}^\paran{L + 1}(x,x') + \Sigma^\paran{L + 1}(x,x'),
+\end{align*}
+where
+\begin{align*}
+\dot{\Sigma}^\paran{L + 1}(x,x') = \EE_{f \sim \NN(0,\Sigma^\paran{L})} [ \dot{\sigma}(f(x)) \dot{\sigma}(f(x'))],
+\end{align*}
+where $\dot{\sigma}$ denotes the derivative of $\sigma$.}
+
+\newpage
 
 \subsection{Asymptotics During Training}
 
