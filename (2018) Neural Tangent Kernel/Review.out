@@ -1,0 +1,13 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Neural Networks}{}% 2
+\BOOKMARK [1][-]{section.3}{Kernel Gradient}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Random Functions Approximation}{section.3}% 4
+\BOOKMARK [1][-]{section.4}{Neural Tangent Kernel}{}% 5
+\BOOKMARK [2][-]{subsection.4.1}{Initialization}{section.4}% 6
+\BOOKMARK [2][-]{subsection.4.2}{Training}{section.4}% 7
+\BOOKMARK [1][-]{section.5}{Least-Squares Regression}{}% 8
+\BOOKMARK [1][-]{appendix.A}{Appendix}{}% 9
+\BOOKMARK [2][-]{subsection.A.1}{Asymptotics at Initialization}{appendix.A}% 10
+\BOOKMARK [2][-]{subsection.A.2}{Asymptotics During Training}{appendix.A}% 11
+\BOOKMARK [2][-]{subsection.A.3}{A Priori Control During Training}{appendix.A}% 12
+\BOOKMARK [2][-]{subsection.A.4}{Positive-Definiteness of \( L \)}{appendix.A}% 13

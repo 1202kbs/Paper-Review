@@ -6,6 +6,7 @@
 \usepackage{csquotes}
 \usepackage{enumitem}
 \usepackage{mathrsfs}
+\usepackage{hyperref}
 \usepackage{tikz-cd}
 \usepackage{amsmath}
 \usepackage{amssymb}
@@ -113,6 +114,7 @@ $\Phi_K$ can be interpreted as a map which interpolates $d$ using the kernel $K$
 &= - \| d|_{f(t)} \|_K^2.
 \end{align*}
 Convergence to a critical point of $C$ is hence guaranteed if the kernel $K$ is positive definite with respect to $\|\cdot\|_{\pin}$ : the cost is then strictly decreasing except at points such that $\|d|_{f(t)}\|_{\pin} = 0$. If the cost is convex and bounded from below, the function $f(t)$ therefore converges to a global minimum as $t \rightarrow \infty$.
+\item For our setup, which is that of a finite dataset $x_1, \ldots, x_n \in \RR^{n_0}$, the cost function $C$ only depends on the values of $f \in \FF$ at the data points. Hence, the global minimum may not be unique. Specifically, any function which minimizes the cost functional on the data points is a global minimum. For instance, see Figure 2 in the paper.
 \end{itemize}
 
 \newpage
@@ -210,6 +212,134 @@ and so
 \begin{align*}
 d_t = -d|_{f_{\theta(t)}}.
 \end{align*}
+\item The limiting NTK is positive definite if the span of the derivatives $\partial_{\theta_p} F^\paran{L}$ becomes dense in $\FF$ w.r.t. the $\pin$ norm as the width grows to infinity. See the Proposition below.
+\end{itemize}
+
+\textbf{Proposition.} \textit{Let $\FF$ be an infinite-dimensional vector space equipped with an inner product. Let $\{f_n\}_{n = 1}^\infty$ be a set of vectors in $\FF$ such that its span is dense in $\FF$. That is, finite linear combinations of elements in $\{f_n\}_{n = 1}^\infty$ is are dense in $\FF$. Define (assuming it exists)
+\begin{align*}
+\Theta = \sum_{n = 1}^\infty f_n \otimes f_n.
+\end{align*}
+Then $\|g\| > 0$ implies that $\|g\|_\Theta > 0$, i.e., $\Theta$ is positive definite.}
+
+\begin{proof}
+Without loss of generality, we assume $\{f_n\}_{n = 1}^\infty$ is linearly independent. By the Gram-Schmidt process, we may also assume $\{f_n\}_{n = 1}^\infty$ is orthonormal. Suppose there is $g \in \FF$ such that $\|g\|_\Theta = 0$, i.e.,
+\begin{align*}
+0 = \|g\|_\Theta^2 = \sum_{n = 1}^\infty g^\top (f_n \otimes f_n) g = \sum_{n = 1}^\infty \inner{f_n}{g}^2.
+\end{align*}
+(We need to check whether we can interchange the inner product with $g$ and the infinite sum, but I'm being lazy here.) This implies that
+\begin{align*}
+\inner{f_n}{g} = 0 \quad \forall n.
+\end{align*}
+Since $\{f_n\}_{n = 1}^\infty$ is an orthonormal basis of $\FF$, $g = 0$ and so $\|g\| = 0$. (See, for instance, Theorem 4.2.3 of \textit{Real Analysis} by Stein and Shakarchi.)
+\end{proof}
+
+\section{Least-Squares Regression}
+
+\begin{itemize}
+\item Given a goal function $f^*$ and input distribution $\pin$, the least-squares regression cost is
+\begin{align*}
+C(f) = \frac{1}{2} \|f - f^*\|^2_\pin = \frac{1}{2} \EE_{x \sim \pin} [ \|f(x) - f^*(x)\|^2 ].
+\end{align*}
+\item We are interested in the behavior of a function $f_t$ during kernel gradient descent with a kernel $K$.
+\begin{align*}
+\partial_t f_t = \Phi_K(\inner{f^* - f}{\cdot}_\pin)
+\end{align*}
+If we define the map $\Pi : f \mapsto \Phi_K(\inner{f}{\cdot}_\pin)$, this differential equation is equivalent to
+\begin{align*}
+\partial_t f_t = \Pi(f - f^*).
+\end{align*}
+Since $\Pi$ is a linear operator on $\FF$, the solution of this differential equation can be expressed as
+\begin{align*}
+f_t = f^* + e^{-t\Pi}(f_0 - f^*)
+\end{align*}
+where
+\begin{align*}
+e^{-t\Pi} = \sum_{k = 0}^\infty \frac{(-t)^k}{k!} \Pi^k.
+\end{align*}
+For instance, see \url{https://en.wikipedia.org/wiki/Matrix\_differential\_equation}.
+\item If $\Pi$ can be diagonalized by eigenfunctions $f^\paran{i}$ with eigenvalues $\lambda_i$, the exponential $e^{-t\Pi}$ has the same eigenfunctions with eigenvalues $e^{-t \lambda_i}$. Specifically,
+\begin{align*}
+e^{-t\Pi}(f^\paran{i}) = \sum_{k = 0}^\infty \frac{(-t)^k}{k!} \Pi^k(f^\paran{i}) = \sum_{k = 0}^\infty \frac{(-t \lambda_i)^k}{k!} f^\paran{i} = e^{-t\lambda_i} f^\paran{i}.
+\end{align*}
+\item For a finite dataset $x_1, \ldots, x_N$ of size $N$, the map $\Pi$ takes the form
+\begin{align*}
+\Pi(f)_k(x) = \frac{1}{N} \sum_{i = 1}^N \sum_{k' = 1}^{n_L} f_{k'}(x_i) K_{kk'}(x_i,x).
+\end{align*}
+This is from the definition of the maps $\Pi$ and $\Phi_K$.
+\item The map $\Pi$ has at most $Nn_L$ positive eigenfunctions since each summand $f_{k'}(x_i)K_{kk'}(x_i,x)$ can contribute at most one eigenfunction. The eigenfunctions are the kernel principal components $f^\paran{1}, \ldots, f^\paran{Nn_L}$ of the data with respect to the kernel $K$. To understand what this means, consider the case $n_L = 1$ so
+\begin{align*}
+\Pi(f)(x) = \frac{1}{N} \sum_{i = 1}^N f(x_i) K(x_i,x).
+\end{align*}
+Each eigenfunction $f^\paran{n}$ must satisfy
+\begin{align*}
+\lambda_n f^\paran{n}(x_j) = \Pi(f^\paran{n})(x_j) = \frac{1}{N} \sum_{i = 1}^N f^\paran{n}(x_i) K(x_i,x_j)
+\end{align*}
+or in matrix form,
+\begin{align*}
+N \lambda_n (f^\paran{n}(x_j))_j = (K(x_i,x_j))_{i,j} (f^\paran{n}(x_j))_j.
+\end{align*}
+This coincides with Equation (8) in \url{https://people.eecs.berkeley.edu/~wainwrig/stat241b/scholkopf_kernel.pdf}. The corresponding eigenvalues $\lambda_i$ is the variance captured by the component.
+\item Decomposing the difference
+\begin{align*}
+f^* - f_0 = \Delta^0_f + \Delta^1_f + \cdots + \Delta^{Nn_L}_f
+\end{align*}
+along the eigenspaces of $\Pi$, the trajectory of the function $f_t$ reads
+\begin{align*}
+f_t = f^* + \Delta^0_f + \sum_{i = 1}^{Nn_L} e^{-t \lambda_i} \Delta^i_f,
+\end{align*}
+where $\Delta^0_f$ is in the kernel (null-space) of $\Pi$ and $\Delta^i_f \propto f^\paran{i}$.
+\item Note that by the linearity of the map $e^{-t\Pi}$, if $f_0$ is initialized with a Gaussian distribution (as in the case for ANNs in the infinite-width limit), then $f_t$ is Gaussian for all times $t$.
+\item Assuming that the kernel is positive definite on the data (implying that the $Nn_L \times Nn_L$ Gram matrix $\tilde{K} = (K_{kk'}(x_i,x_j))_{ik,jk'}$ is invertible), as $t \rightarrow \infty$ limit, we get that
+\begin{align*}
+f_\infty = f^* + \Delta^0_f = f_0 - \sum_{i = 1}^{Nn_L} \Delta^i_f
+\end{align*}
+takes the form
+\begin{align*}
+f_{\infty,k}(x) = \kappa^\top_{x,k} \tilde{K}^{-1} y^* + (f_0(x) - \kappa^\top_{x,k} \tilde{K}^{-1} y_0)
+\end{align*}
+with the $Nn_L$-vectors $\kappa_{x,k}$, $y^*$, and $y_0$ given by
+\begin{align*}
+\kappa_{x,k} &= (K_{kk'}(x,x_i))_{i,k'} \\
+y^* &= (f^*_k(x_i))_{i,k} \\
+y_0 &= (f_{0,k}(x_i))_{i,k}.
+\end{align*}
+\item The expression for $f_\infty(x)$ might be confusing. Let us analyze the expression. We observe that
+\begin{align*}
+\sum_{i = 1}^{Nn_L} \Delta^i_f
+\end{align*}
+corresponds to the projection of $f^* - f_0$ onto the range of $\Pi$. This is because, by definition,
+\begin{align*}
+\sum_{i = 1}^{Nn_L} \Delta^i_f = (f^* - f_0) - \Delta^0_f,
+\end{align*}
+and $\Delta^0_f$ is the component of $f^* - f_0$ in the null space of $\Pi$. To verify the relation
+\begin{align*}
+\sum_{i = 1}^{Nn_L} \Delta^i_f = \kappa^\top_{x,k} \tilde{K}^{-1} (y^* - y_0),
+\end{align*}
+we thus need to check two facts.
+\begin{itemize}
+\item $\kappa^\top_{x,k} \tilde{K}^{-1} (y^* - y_0)$ is in the range of $\Pi$.
+\item $\Pi(\kappa^\top_{x,k} \tilde{K}^{-1} (y^* - y_0)) = \Pi(f)$.
+\end{itemize}
+Recall that
+\begin{align*}
+\Pi(f)_k(x) = \frac{1}{N} \sum_{i = 1}^N \sum_{k' = 1}^{n_L} f_{k'}(x_i) K_{kk'}(x_i,x).
+\end{align*}
+The range of $\Pi$ is the collection of functions that can be expressed as a linear combination of $\{K_{kk'}(x_i,x)\}_{i,k'}$. We indeed observe that $\kappa^\top_{x,k} \tilde{K}^{-1} (y^* - y_0)$ is a linear combination of $\{K_{kk'}(x_i,x)\}_{i,k'}$. Moreover, it can easily be calculated that
+\begin{align*}
+\kappa^\top_{\textcolor{red}{x_i},k} \tilde{K}^{-1} (y^* - y_0) = (f^* - f_0)(x_i)
+\end{align*}
+and so the second point is true as well.
+\item The first term, $\kappa^\top_{x,k} \tilde{K}^{-1} y^*$, has an important statistical interpretation. It is the maximum-a-posteriori (MAP) estimate given a Gaussian prior on functions $f_k \sim \NN(0,\Theta^\paran{L}_\infty)$ and the conditions $f_k(x_i) = f^*_k(x_i)$. For instance, see Equation (2.19) in \url{http://www.gaussianprocess.org/gpml/chapters/RW.pdf}. Equivalently, it is equal to the kernel ridge regression as the regularization goes to zero.
+\item The second term $(f_0(x) - \kappa^\top_{x,k} \tilde{K}^{-1} y_0)$ is a centered Gaussian whose variance vanishes on the points of the dataset. Indeed, since $f_{0,k} \sim \NN(0,\Theta^\paran{L}_\infty)$,
+\begin{align*}
+\EE[f_0(x) - \kappa^\top_{x,k} \tilde{K}^{-1} y_0] = \EE[f_0(x)] - \kappa^\top_{x,k} \tilde{K}^{-1} \EE[y_0] = 0.
+\end{align*}
+Also,
+\begin{align*}
+f_0(x_i) - \kappa^\top_{x_i,k} \tilde{K}^{-1} y_0 = f_0(x_i) - f_0(x_i) = 0
+\end{align*}
+so the variance vanishes on the points of the dataset.
+\item This shows that in the infinite-width limit, we are essentially fitting a Gaussian process to the dataset! Indeed, see Figure 2.
 \end{itemize}
 
 \appendix
@@ -272,7 +402,7 @@ which proves $f_{\theta,i} \sim \NN(0,\Sigma^\paran{1})$. This concludes the bas
 
 The key to the induction step is to consider an $(L + 1)$-network as the following composition. An $L$-network $\RR^{n_0} \rightarrow \RR^{n_L}$ mapping the input to the pre-activations $\tilde{\alpha}^\paran{L}_i$, followed by an elementwise application of the nonlinearity $\sigma$ and then a random affine map $\RR^{n_L} \rightarrow \RR^{n_{L + 1}}$. The induction hypothesis gives in the limit as sequentially $n_1, \ldots, n_{L - 1} \rightarrow \infty$, the preactivations $\tilde{\alpha}^\paran{L}_i$ tend to i.i.d. Gaussian processes with covariance $\Sigma^\paran{L}$. Then, conditioned on $\tilde{\alpha}^\paran{L}_i \sim \NN(0,\Sigma^\paran{L})$, the outputs
 \begin{align*}
-f_{\theta,i}(x) = \frac{1}{\sqrt{n_L}} \sum_{j = 1}^{n_L} W^\paran{L}_{i,j} \sigma(\tilde{\alpha}^\paran{L}(x;\theta)) + \beta b^\paran{L}_i
+f_{\theta,i}(x) = \frac{1}{\sqrt{n_L}} \sum_{j = 1}^{n_L} W^\paran{L}_{i,j} \sigma(\tilde{\alpha}^\paran{L}_j(x;\theta)) + \beta b^\paran{L}_i
 \end{align*}
 are i.i.d. centered Gaussians with covariance
 \begin{align*}
