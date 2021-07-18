@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.12) (preloaded format=pdflatex 2021.1.15)  11 JUL 2021 23:05
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.12) (preloaded format=pdflatex 2021.1.15)  19 JUL 2021 00:35
 entering extended mode
 **./Review.tex
 (Review.tex
@@ -632,23 +632,23 @@ File: l3backend-pdftex.def 2020-09-24 L3 backend support: PDF output (pdfTeX)
 ) (Review.aux)
 \openout1 = `Review.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 50.
-LaTeX Font Info:    ... okay on input line 50.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 50.
-LaTeX Font Info:    ... okay on input line 50.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 50.
-LaTeX Font Info:    ... okay on input line 50.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 50.
-LaTeX Font Info:    ... okay on input line 50.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 50.
-LaTeX Font Info:    ... okay on input line 50.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 50.
-LaTeX Font Info:    ... okay on input line 50.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 50.
-LaTeX Font Info:    ... okay on input line 50.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 50.
-LaTeX Font Info:    ... okay on input line 50.
-Package hyperref Info: Link coloring OFF on input line 50.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 53.
+LaTeX Font Info:    ... okay on input line 53.
+Package hyperref Info: Link coloring OFF on input line 53.
 
 (C:\MiKTeX\tex/latex/hyperref\nameref.sty
 Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
@@ -661,9 +661,9 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 )
 \c@section@level=\count308
 )
-LaTeX Info: Redefining \ref on input line 50.
-LaTeX Info: Redefining \pageref on input line 50.
-LaTeX Info: Redefining \nameref on input line 50.
+LaTeX Info: Redefining \ref on input line 53.
+LaTeX Info: Redefining \pageref on input line 53.
+LaTeX Info: Redefining \nameref on input line 53.
  (Review.out)
 (Review.out)
 \@outlinefile=\write4
@@ -687,108 +687,102 @@ Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
 Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 85.
 )
-LaTeX Info: Redefining \celsius on input line 50.
-Package gensymb Info: Faking symbols for \degree and \celsius on input line 50.
+LaTeX Info: Redefining \celsius on input line 53.
+Package gensymb Info: Faking symbols for \degree and \celsius on input line 53.
 
 
 
 Package gensymb Warning: Not defining \perthousand.
 
-LaTeX Info: Redefining \ohm on input line 50.
-Package gensymb Info: Using \Omega for \ohm on input line 50.
+LaTeX Info: Redefining \ohm on input line 53.
+Package gensymb Info: Using \Omega for \ohm on input line 53.
 
 Package gensymb Warning: Not defining \micro.
 
-LaTeX Font Info:    Trying to load font information for U+lasy on input line 53
+LaTeX Font Info:    Trying to load font information for U+lasy on input line 56
 .
 (C:\MiKTeX\tex/latex/base\ulasy.fd
 File: ulasy.fd 1998/08/17 v2.2e LaTeX symbol font definitions
 )
-LaTeX Font Info:    Trying to load font information for U+rsfs on input line 53
+LaTeX Font Info:    Trying to load font information for U+rsfs on input line 56
 .
  (C:\MiKTeX\tex/latex/jknappen\ursfs.fd
 File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 )
-LaTeX Font Info:    Trying to load font information for U+msa on input line 53.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 56.
 
 
 (C:\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 53.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 56.
 
  (C:\MiKTeX\tex/latex/amsfonts\umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <8> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 53.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 56.
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <6> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 53.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 56.
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <5> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 53.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 56.
 LaTeX Font Info:    Font shape `U/lasy/b/n' in size <7> not available
-(Font)              Font shape `U/lasy/m/n' tried instead on input line 57.
+(Font)              Font shape `U/lasy/m/n' tried instead on input line 60.
 
 [1
 
 {C:/Users/Beomsu/AppData/Local/MiKTeX/pdftex/config/pdftex.map}] [2] [3]
 [4] [5]
-Overfull \hbox (11.334pt too wide) in paragraph at lines 269--270
-\OT1/cmr/m/n/10 tribute at most one eigen-func-tion. The eigen-func-tions are t
-he ker-nel prin-ci-pal com-po-nents $\OML/cmm/m/it/10 f[]; [] ; f[]$
- []
-
-
-Overfull \hbox (32.93687pt too wide) in paragraph at lines 280--282
+Overfull \hbox (32.93687pt too wide) in paragraph at lines 292--294
 \OT1/cmr/m/n/10 This co-in-cides with Equa-tion (8) in []$\OT1/cmtt/m/n/10 http
 s : / / people . eecs . berkeley . edu / []wainwrig / stat241b / scholkopf _
  []
 
 [6]
-Overfull \hbox (19.84532pt too wide) in paragraph at lines 326--328
+Overfull \hbox (19.84532pt too wide) in paragraph at lines 338--340
 \OT1/cmr/m/n/10 The range of $$ is the col-lec-tion of func-tions that can be 
 ex-pressed as a lin-ear com-bi-na-tion of $\OMS/cmsy/m/n/10 f\OML/cmm/m/it/10 K
 []\OT1/cmr/m/n/10 (\OML/cmm/m/it/10 x[]; x\OT1/cmr/m/n/10 )\OMS/cmsy/m/n/10 g[]
 $\OT1/cmr/m/n/10 .
  []
 
-[7] [8] [9] [10] [11] [12]
+[7] [8] [9] [10] [11] [12] [13] [14]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 511.
-
-
-Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\Theta' on input line 511.
+(hyperref)                removing `math shift' on input line 599.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `superscript' on input line 511.
+(hyperref)                removing `\Theta' on input line 599.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `subscript' on input line 511.
+(hyperref)                removing `superscript' on input line 599.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `\infty' on input line 511.
+(hyperref)                removing `subscript' on input line 599.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 511.
+(hyperref)                removing `\infty' on input line 599.
 
-[13] (Review.aux)
+
+Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
+(hyperref)                removing `math shift' on input line 599.
+
+[15] (Review.aux)
 Package rerunfilecheck Info: File `Review.out' has not changed.
 (rerunfilecheck)             Checksum: D7D5720B0F01EF6437218709CC63E491;829.
  ) 
 Here is how much of TeX's memory you used:
- 19537 strings out of 479697
- 368199 string characters out of 2883650
- 675284 words of memory out of 3000000
- 36185 multiletter control sequences out of 15000+200000
+ 19584 strings out of 479697
+ 369302 string characters out of 2883650
+ 680358 words of memory out of 3000000
+ 36229 multiletter control sequences out of 15000+200000
  419735 words of font info for 94 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 121i,11n,124p,689b,481s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 121i,17n,124p,689b,788s stack positions out of 5000i,500n,10000p,200000b,50000s
  <C:\Users\Beomsu\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\tcr
 m0600.pk> <C:\Users\Beomsu\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
 600\tcrm1000.pk> <C:\Users\Beomsu\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen
@@ -800,16 +794,17 @@ m0600.pk> <C:\Users\Beomsu\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi
 MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/MiKTeX/fonts/type1/public/a
 msfonts/cm/cmr10.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Mi
 KTeX/fonts/type1/public/amsfonts/cm/cmr17.pfb><C:/MiKTeX/fonts/type1/public/ams
-fonts/cm/cmr5.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/MiKTeX
-/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/MiKTeX/fonts/type1/public/amsfonts
-/cm/cmsy10.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy5.pfb><C:/MiKTeX/f
-onts/type1/public/amsfonts/cm/cmsy7.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/
-cm/cmsy8.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C:/MiKTeX/fo
-nts/type1/public/amsfonts/cm/cmtt10.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/
-cm/cmtt8.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on Review.pdf (13 pages, 308617 bytes).
+fonts/cm/cmr5.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/MiKTeX
+/fonts/type1/public/amsfonts/cm/cmr7.pfb><C:/MiKTeX/fonts/type1/public/amsfonts
+/cm/cmr8.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/MiKTeX/fo
+nts/type1/public/amsfonts/cm/cmsy5.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/c
+m/cmsy7.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/MiKTeX/font
+s/type1/public/amsfonts/cm/cmti10.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm
+/cmtt10.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt8.pfb><C:/MiKTeX/font
+s/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on Review.pdf (15 pages, 329031 bytes).
 PDF statistics:
- 231 PDF objects out of 1000 (max. 8388607)
- 27 named destinations out of 1000 (max. 500000)
+ 245 PDF objects out of 1000 (max. 8388607)
+ 30 named destinations out of 1000 (max. 500000)
  117 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -14,6 +14,7 @@
 \usepackage{parskip}
 \usepackage{xcolor}
 \usepackage{amsthm}
+\usepackage{tikz}
 \usepackage{bm}
 
 \newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
@@ -32,6 +33,8 @@
 \newcommand{\MM}{\mathcal{M}}
 \newcommand{\NN}{\mathcal{N}}
 \newcommand{\OO}{\mathcal{O}}
+
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{\node[shape=circle,draw,inner sep=0.5pt] (char) {#1};}}
 
 \newcommand{\inner}[2]{\left\langle #1, #2 \right\rangle}
 \newcommand{\paran}[1]{{( #1 )}}
@@ -58,6 +61,10 @@
 \end{itemize}
 
 \section{Introduction}
+
+\begin{itemize}
+\item In this paper, we investigate fully connected networks in the infinite-width limit, and describe the dynamics of the network function $f_\theta$ during training.
+\end{itemize}
 
 \section{Neural Networks}
 
@@ -86,6 +93,7 @@ f_\theta(x) &= \tilde{\alpha}^\paran{L}(x;\theta).
 \section{Kernel Gradient}
 
 \begin{itemize}
+\item If you are reading NTK for the first time, it is helpful to set $n_L = 1$. The concept of a multi-dimensional kernel can be confusing for $n_L > 1$.
 \item $C : \FF \rightarrow \RR$ : functional cost.
 \item $K : \RR^{n_0 \times n_0} \rightarrow \RR^{n_L \times n_L}$ : multi-dimensional kernel which satisfies $K(x,x') = K(x',x)^\top$.
 \item $\inner{f}{g}_K = \EE_{x,x' \sim \pin} [f(x)^\top K(x,x') g(x')]$ : inner product w.r.t. kernel $K$.
@@ -105,8 +113,7 @@ $\Phi_K$ can be interpreted as a map which interpolates $d$ using the kernel $K$
 \end{align*}
 \item During kernel gradient descent, the cost $C(f(t))$ evolves as
 \begin{align*}
-\partial_t C|_{f(t)} = \partial_t C(f(t)) &= \din_f C|_{f(t)}(\partial_t f(t)) \\
-&= \inner{d|_{f(t)}}{\partial_t f(t)}_{\pin} \\
+\partial_t C|_{f(t)} = \partial_t C(f(t)) = \din_f C|_{f(t)}(\partial_t f(t)) &= \inner{d|_{f(t)}}{\partial_t f(t)}_{\pin} \\
 &= \inner{d|_{f(t)}}{-\frac{1}{N} \sum_{i = 1}^N K(\cdot,x_i) d|_{f(t)}(x_i)}_\pin \\
 &= \frac{1}{N} \sum_{j = 1}^N d|_{f(t)}(x_j)^\top \left( -\frac{1}{N} \sum_{i = 1}^N K(x_j,x_i) d|_{f(t)}(x_i) \right) \\
 &= -\frac{1}{N^2} \sum_{j = 1}^N \sum_{i = 1}^N d|_{f(t)}(x_j)^\top K(x_j,x_i) d|_{f(t)}(x_i) \\
@@ -180,9 +187,13 @@ Hence, this method approximates kernel gradient descent with respect to the limi
 \end{align*}
 with respect to the neural tangent kernel (NTK)
 \begin{align*}
-\Theta^\paran{L}(\theta) = \sum_{p = 1}^P \partial_{\theta_p} F^\paran{L}(\theta) \otimes \partial_{\theta_p} F^\paran{L}(\theta).
+\Theta^\paran{L}(\theta) = \sum_{p = 1}^P \partial_{\theta_p} F^\paran{L}(\theta) \otimes \partial_{\theta_p} F^\paran{L}(\theta)
 \end{align*}
-This can be derived by following the steps in Section 3.1 with $F^\paran{L}$ in place of $F^{lin}$.
+such that (denoting $\Theta^\paran{L}(\theta)$ by $\Theta^\paran{L}$ for brevity),
+\begin{align*}
+\Theta^\paran{L}(x,x') = \sum_{p = 1}^P \partial_{\theta_p} F^\paran{L}(\theta)(x) \otimes \partial_{\theta_p} F^\paran{L}(\theta)(x') = \sum_{p = 1}^P \partial_{\theta_p} f_\theta(x) \otimes \partial_{\theta_p} f_\theta(x').
+\end{align*}
+$\Theta^\paran{L}(\theta)$ can be derived by following the steps in Section 3.1 with $F^\paran{L}$ in place of $F^{lin}$.
 \item However, in contrast to $F^{lin}$, the realization function $F^\paran{L}$ of ANNs is not linear.
 \item As a consequence, the derivatives $\partial_{\theta_p} F^\paran{L}(\theta)$ and the NTK depend on the parameters $\theta$.
 \end{itemize}
@@ -190,6 +201,7 @@ This can be derived by following the steps in Section 3.1 with $F^\paran{L}$ in 
 \subsection{Initialization}
 
 \begin{itemize}
+\item The output functions $f_{\theta,i}$ for $i = 1, \ldots, n_L$ tend to i.i.d. Gaussian processes in the infinite limit.
 \item The first key result is that in the limit $n_1, \ldots, n_{L - 1} \rightarrow \infty$, the NTK converges in probability to a deterministic limiting kernel.
 \end{itemize}
 
@@ -266,7 +278,7 @@ e^{-t\Pi}(f^\paran{i}) = \sum_{k = 0}^\infty \frac{(-t)^k}{k!} \Pi^k(f^\paran{i}
 \Pi(f)_k(x) = \frac{1}{N} \sum_{i = 1}^N \sum_{k' = 1}^{n_L} f_{k'}(x_i) K_{kk'}(x_i,x).
 \end{align*}
 This is from the definition of the maps $\Pi$ and $\Phi_K$.
-\item The map $\Pi$ has at most $Nn_L$ positive eigenfunctions since each summand $f_{k'}(x_i)K_{kk'}(x_i,x)$ can contribute at most one eigenfunction. The eigenfunctions are the kernel principal components $f^\paran{1}, \ldots, f^\paran{Nn_L}$ of the data with respect to the kernel $K$. To understand what this means, consider the case $n_L = 1$ so
+\item The map $\Pi$ has at most $Nn_L$ positive eigenfunctions since the dimension of $(K_{kk'}(x_i,x_j))_{ik,jk'}$ is $Nn_L \times Nn_L$. The eigenfunctions are the kernel principal components $f^\paran{1}, \ldots, f^\paran{Nn_L}$ of the data with respect to the kernel $K$. To understand what this means, consider the case $n_L = 1$ so
 \begin{align*}
 \Pi(f)(x) = \frac{1}{N} \sum_{i = 1}^N f(x_i) K(x_i,x).
 \end{align*}
@@ -317,7 +329,7 @@ and $\Delta^0_f$ is the component of $f^* - f_0$ in the null space of $\Pi$. To 
 \end{align*}
 we thus need to check two facts.
 \begin{itemize}
-\item $\kappa^\top_{x,k} \tilde{K}^{-1} (y^* - y_0)$ is in the range of $\Pi$.
+\item $\kappa^\top_{x,k} \tilde{K}^{-1} (y^* - y_0)$ is in the range of $\Pi$.\footnote{Here, I am assuming the null space and the range of $\Pi$ is orthogonal. This holds for linear operators on finite-dimensional vector spaces.}
 \item $\Pi(\kappa^\top_{x,k} \tilde{K}^{-1} (y^* - y_0)) = \Pi(f)$.
 \end{itemize}
 Recall that
@@ -326,7 +338,7 @@ Recall that
 \end{align*}
 The range of $\Pi$ is the collection of functions that can be expressed as a linear combination of $\{K_{kk'}(x_i,x)\}_{i,k'}$. We indeed observe that $\kappa^\top_{x,k} \tilde{K}^{-1} (y^* - y_0)$ is a linear combination of $\{K_{kk'}(x_i,x)\}_{i,k'}$. Moreover, it can easily be calculated that
 \begin{align*}
-\kappa^\top_{\textcolor{red}{x_i},k} \tilde{K}^{-1} (y^* - y_0) = (f^* - f_0)(x_i)
+\kappa^\top_{\textcolor{red}{x_i},k} \tilde{K}^{-1} (y^* - y_0) = (f^* - f_0)(\textcolor{red}{x_i})
 \end{align*}
 and so the second point is true as well.
 \item The first term, $\kappa^\top_{x,k} \tilde{K}^{-1} y^*$, has an important statistical interpretation. It is the maximum-a-posteriori (MAP) estimate given a Gaussian prior on functions $f_k \sim \NN(0,\Theta^\paran{L}_\infty)$ and the conditions $f_k(x_i) = f^*_k(x_i)$. For instance, see Equation (2.19) in \url{http://www.gaussianprocess.org/gpml/chapters/RW.pdf}. Equivalently, it is equal to the kernel ridge regression as the regularization goes to zero.
@@ -432,6 +444,82 @@ where
 \dot{\Sigma}^\paran{L + 1}(x,x') = \EE_{f \sim \NN(0,\Sigma^\paran{L})} [ \dot{\sigma}(f(x)) \dot{\sigma}(f(x'))],
 \end{align*}
 where $\dot{\sigma}$ denotes the derivative of $\sigma$.}
+
+\begin{proof}
+We first remark that
+\begin{align*}
+\Theta^\paran{L}_\infty \otimes Id_{n_L}
+\end{align*}
+is just the $n_L \times n_L$ identity matrix multiplied by the scalar kernel $\Theta^\paran{L}_\infty$.
+
+Let us begin the proof. Recall that the NTK is given by
+\begin{align*}
+\Theta^\paran{L}(x,x') = \sum_{p = 1}^P \partial_{\theta_p} f_\theta(x) \otimes \partial_{\theta_p} f_\theta(x').
+\end{align*}
+It follows that
+\begin{align*}
+\Theta_{kk'}(x,x') = \sum_{p = 1}^P \partial_{\theta_p} f_{\theta,k}(x) \cdot \partial_{\theta_p} f_{\theta,k'}(x').
+\end{align*}
+From here, we proceed by induction. When $L = 1$,
+\begin{align*}
+f_\theta(x) = \frac{1}{\sqrt{n_0}} W^\paran{0} x + \beta b^\paran{0}.
+\end{align*}
+The NTK is a sum over the entries of $W^\paran{0}$ and those of $b^\paran{0}$. Since
+\begin{align*}
+\partial_{W^\paran{0}_{ij}} f_{\theta,k}(x) = \frac{1}{\sqrt{n_0}} x_i \delta_{jk}, \qquad \partial_{b^\paran{0}_j} f_{\theta,k}(x) = \beta \delta_{jk},
+\end{align*}
+we have
+\begin{align*}
+\Theta_{kk'}(x,x') &= \sum_{i = 1}^{n_0} \sum_{j = 1}^{n_1} \partial_{W^\paran{0}_{ij}} f_{\theta,k}(x) \cdot \partial_{W^\paran{0}_{ij}} f_{\theta,k'}(x') + \sum_{j = 1}^{n_1} \partial_{b^\paran{0}_j} f_{\theta,k}(x) \cdot \partial_{b^\paran{0}_j} f_{\theta,k'}(x') \\
+&= \frac{1}{n_0} \sum_{i = 1}^{n_0} \sum_{j = 1}^{n_1} x_i x_i' \delta_{jk} \delta_{jk'} + \beta^2 \sum_{j = 1}^{n_1} \delta_{jk} \delta_{jk'} \\
+&= \frac{1}{n_0} x^\top x \delta_{kk'} + \beta^2 \delta_{kk'} \\
+&= \Sigma^\paran{1}(x,x') \delta_{kk'} \\
+&= (\Sigma^\paran{1}(x,x') \otimes I_{n_1})_{kk'}
+\end{align*}
+and so
+\begin{align*}
+\Theta(x,x') = \Sigma^\paran{1}(x,x') \otimes I_{n_1}.
+\end{align*}
+This concludes the base case.
+
+Here again, the key to proving the induction step is the observation that a network of depth $L + 1$ is an $L$-network mapping the inputs $x$ to the preactivations on the $L$-th layer $\tilde{\alpha}^\paran{L}(x)$ followed by a nonlinearity and a random affine function. For a network of depth $L + 1$, let us therefore split the parameters into the parameters $\tilde{\theta}$ of the first $L$ layers and those of the last layer $(W^\paran{L},b^\paran{L})$. We can then split the NTK into a sum over the parameters $\tilde{\theta}$ of the first $L$ layers and the remaining parameters $W^\paran{L}$ and $b^\paran{L}$.
+\begin{align*}
+\Theta^\paran{L + 1}_{kk'}(x,x') = \underbrace{\sum_{\tilde{\theta}_p \in \tilde{\theta}} \partial_{\tilde{\theta}_p} f_{\theta,k}(x) \cdot \partial_{\tilde{\theta}_p} f_{\theta,k'}(x')}_{\circled{1}} + \underbrace{\sum_{\theta_p \in (W^\paran{L},b^\paran{L})} \partial_{\theta_p} f_{\theta,k}(x) \cdot \partial_{\theta_p} f_{\theta,k'}(x')}_{\circled{2}}.
+\end{align*}
+We need to calculate \circled{1} and \circled{2} in the limit $n_1, \ldots, n_{L + 1} \rightarrow \infty$.
+
+Let us calculate \circled{1} as $n_1, \ldots, n_{L + 1} \rightarrow \infty$. Since
+\begin{align*}
+f_{\theta,k}(x) = \frac{1}{\sqrt{n_L}} \sum_{i = 1}^{n_L} W_{ik}^\paran{L} \sigma(\tilde{\alpha}^\paran{L}_i(x;\theta)) + \beta b^\paran{L}_k,
+\end{align*}
+by the chain rule, for $\tilde{\theta}_p \in \tilde{\theta}$,
+\begin{align*}
+\partial_{\tilde{\theta}_p} f_{\theta,k}(x) = \frac{1}{\sqrt{n_L}} \sum_{i = 1}^{n_L} \partial_{\tilde{\theta}_p} \tilde{\alpha}^\paran{L}_i(x;\theta) \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) W_{ik}^\paran{L}.
+\end{align*}
+It follows that the contribution of the parameters $\tilde{\theta}$ to the NTK in the limit $n_1, \ldots, n_{L - 1} \rightarrow \infty$ is
+\begin{align*}
+\circled{1} &= \frac{1}{n_L} \sum_{\tilde{\theta}_p \in \tilde{\theta}} \sum_{i = 1}^{n_L} \sum_{i' = 1}^{n_L} \left( \partial_{\tilde{\theta}_p} \tilde{\alpha}^\paran{L}_i(x;\theta) \cdot \partial_{\tilde{\theta}_p} \tilde{\alpha}^\paran{L}_{i'}(x';\theta) \right) \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i'}(x';\theta)) W^\paran{L}_{ik} W^\paran{L}_{i'k'} \\
+&= \frac{1}{n_L} \sum_{i = 1}^{n_L} \sum_{i' = 1}^{n_L} \left[ \sum_{\tilde{\theta}_p \in \tilde{\theta}} \partial_{\tilde{\theta}_p} \tilde{\alpha}^\paran{L}_i(x;\theta) \cdot \partial_{\tilde{\theta}_p} \tilde{\alpha}^\paran{L}_{i'}(x';\theta) \right] \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i'}(x';\theta)) W^\paran{L}_{ik} W^\paran{L}_{i'k'} \\
+&= \frac{1}{n_L} \sum_{i = 1}^{n_L} \sum_{i' = 1}^{n_L} \Theta^\paran{L}_{ii'}(x,x') \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i'}(x';\theta)) W^\paran{L}_{ik} W^\paran{L}_{i'k'} \\
+&\rightarrow \frac{1}{n_L} \sum_{i = 1}^{n_L} \sum_{i' = 1}^{n_L} (\Theta^\paran{L}_\infty(x,x') \otimes I_{n_L})_{ii'} \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i'}(x';\theta)) W^\paran{L}_{ik} W^\paran{L}_{i'k'} \\
+&= \frac{1}{n_L} \sum_{i = 1}^{n_L} \sum_{i' = 1}^{n_L} \Theta^\paran{L}_\infty(x,x') \delta_{ii'} \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i'}(x';\theta)) W^\paran{L}_{ik} W^\paran{L}_{i'k'} \\
+&= \frac{1}{n_L} \sum_{i = 1}^{n_L} \Theta^\paran{L}_\infty(x,x') \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i}(x';\theta)) W^\paran{L}_{ik} W^\paran{L}_{ik'}.
+\end{align*}
+At the third line, we have used the definition of the NTK of the first $L$ layers of the network. At the fourth line, we have used the induction hypothesis. Then, by the law of large numbers, as $n_L \rightarrow \infty$, this tends to its expectation
+\begin{align*}
+&\lim_{n_L \rightarrow \infty} \frac{1}{n_L} \sum_{i = 1}^{n_L} \Theta^\paran{L}_\infty(x,x') \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i}(x';\theta)) W^\paran{L}_{ik} W^\paran{L}_{ik'} \\
+&= \EE \left[ \Theta^\paran{L}_\infty(x,x') \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i}(x';\theta)) W^\paran{L}_{ik} W^\paran{L}_{ik'} \right] \\
+&= \Theta^\paran{L}_\infty(x,x') \EE \left[ \dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i}(x';\theta)) \right] \EE \left[ W^\paran{L}_{ik} W^\paran{L}_{ik'} \right] \\
+&= \Theta^\paran{L}_\infty(x,x') \dot{\Sigma}^\paran{L + 1}(x,x') \delta_{kk'} \\
+&= (\Theta^\paran{L}_\infty(x,x') \dot{\Sigma}^\paran{L + 1}(x,x') \otimes I_{n_{L + 1}})_{kk'}.
+\end{align*}
+At the third line, we have used the independence of $\dot{\sigma}(\tilde{\alpha}^\paran{L}_i(x;\theta)) \dot{\sigma}(\tilde{\alpha}^\paran{L}_{i}(x';\theta))$ and $W^\paran{L}_{ik} W^\paran{L}_{ik'}$. At the fourth line, we have used Proposition 1 to evaluate the first expectation, i.e., $\tilde{\alpha}^\paran{L}_i \sim \NN(0,\Sigma^\paran{L})$.
+
+We now calculate \circled{2} in the limit $n_1, \ldots, n_{L + 1} \rightarrow \infty$.
+
+
+
+\end{proof}
 
 \newpage
 
