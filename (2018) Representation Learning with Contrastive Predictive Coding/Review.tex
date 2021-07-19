@@ -1,0 +1,206 @@
+\documentclass[11pt]{article}
+
+\usepackage{mathtools}
+\usepackage{fullpage}
+\usepackage{latexsym}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{mathrsfs}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usepackage{bm}
+
+\newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\EE}{\mathbb{E}}
+
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\FF}{\mathcal{F}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KK}{\mathcal{K}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\NN}{\mathcal{N}}
+\newcommand{\OO}{\mathcal{O}}
+
+\newcommand{\data}{\texttt{data}}
+\newcommand{\noise}{\texttt{noise}}
+\newcommand{\joint}{\texttt{joint}}
+\newcommand{\infonce}{\texttt{InfoNCE}}
+\newcommand{\nce}{\texttt{NCE}}
+\newcommand{\KL}{D_{\text{KL}}}
+\newcommand{\JS}{D_{\text{JS}}}
+\newcommand{\stopg}{\texttt{stop\char`_grad}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\title{Paper Review: Representation Learning with Contrastive Predictive Coding}
+\author{Beomsu Kim\footnote{Department of Mathematical Sciences, KAIST. Email \texttt{beomsu.kim@kaist.ac.kr}}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Paper Information.}
+
+\begin{itemize}
+\item Aaron van den Oord, Yazeh Li, and Oriol Vinyals. Representation Learning with Contrastive Predictive Coding. \underline{arXiv preprint arXiv:1807.03748}, 2018.
+\end{itemize}
+
+\section{InfoNCE}
+
+In InfoNCE, there are two inputs.
+\begin{itemize}
+\item Data joint distribution $p_{XY}(x,y)$ with marginal distributions $p_X(x)$ and $p_Y(y)$,
+\item Parametrized model $f(x,y;\theta)$.
+\end{itemize}
+Our goal is to estimate the mutual information
+\begin{align*}
+I(X;Y) = \KL(p_{XY} \| p_X \otimes p_Y) = \EE_{p_{XY}} \left[ \log \frac{p_{XY}(x,y)}{p_X(x)p_Y(y)} \right].
+\end{align*}
+To achieve this, we first need to estimate the density ratio. That is, we need to have
+\begin{align*}
+f(x,y;\theta) \propto \frac{p_{XY}(x,y)}{p_X(x)p_Y(y)}.
+\end{align*}
+Once we have this ratio, we can approximate the mutual information (Section 2.2).
+
+\newpage
+
+\subsection{Estimating the Density Ratio}
+
+Define the categorical random variable
+\begin{align*}
+I \in \{1, \ldots, N\}, \qquad p_I(i) = \frac{1}{N}
+\end{align*}
+and the joint distribution
+\begin{align*}
+p_{IXY^N}(i,x,y_{1:N}) = p_I(i) p_{XY}(x,y_i) \prod_{j \neq i} p_Y(y_j)
+\end{align*}
+where we denote
+\begin{align*}
+y_{1:N} = (y_1, \ldots, y_N).
+\end{align*}
+Since
+\begin{align*}
+p_{XY^N \mid I}(x,y_{1:N} \mid i) = \frac{p_{IXY^N}(i,x,y_{1:N})}{p_I(i)} = p_{XY}(x,y_i) \prod_{j \neq i} p_Y(y_j),
+\end{align*}
+sampling from $p_{IXY^N}$ means
+\begin{enumerate}
+\item we draw $i \in \{1, \ldots, N\}$ uniformly at random,
+\item draw $(x,y_i) \sim p_{XY}(x,y)$,
+\item draw $y_j \sim p_Y(y)$ for $j \neq i$.
+\end{enumerate}
+This also means $(x,y_i) \sim p_{XY}$ and $(x,y_j) \sim p_X \otimes p_Y$ for $j \neq i$. InfoNCE solves
+\begin{align*}
+\min_\theta \ \LL_\infonce(\theta) = \EE_{p_{IXY^N}} \left[ - \log \frac{f(x,y_i;\theta)}{\sum_{k = 1}^N f(x,y_k;\theta)} \right].
+\end{align*}
+To understand this objective, let us observe that
+\begin{align*}
+p_{I \mid XY^N}(i \mid x, y_{1:N}) &= \frac{p_{IXY_{1:N}}(i,x,y_{1:N})}{\sum_{k = 1}^N p_{IXY_{1:N}}(k,x,y_{1:N})} \\
+&= \frac{p_{XY}(x,y_i) \prod_{j \neq i} p_Y(y_j)}{\sum_{k = 1}^N p_{XY}(x,y_k) \prod_{j \neq k} p_Y(y_j)} \\
+&= \frac{p_{XY}(x,y_i) / p_Y(y_i)}{\sum_{k = 1}^N p_{XY}(x,y_k) / p_Y(y_k)} \\
+&= \frac{p_{XY}(x,y_i) / p_X(x)p_Y(y_i)}{\sum_{k = 1}^N p_{XY}(x,y_k) / p_X(x)p_Y(y_k)}.
+\end{align*}
+Also, define the classifier
+\begin{align*}
+q_{I \mid XY^N}(i \mid x,y_{1:N};\theta) = \frac{f(x,y_i;\theta)}{\sum_{k = 1}^N f(x,y_k;\theta)}.
+\end{align*}
+It follows that
+\begin{align*}
+\LL_\infonce(\theta) &= \EE_{p_{IXY^N}} \left[ - \log \frac{f(x,y_i;\theta)}{\sum_{k = 1}^N f(x,y_k;\theta)} \right] \\
+&= \EE_{p_{IXY^N}} \left[ -\log q_{I \mid XY^N}(i \mid x,y_{1:N};\theta) \right] \\
+&= \EE_{p_{XY^N}} \left[ \EE_{p_{I \mid XY^N}} \left[ -\log q_{I \mid XY^N}(i \mid x,y_{1:N};\theta) \right] \right] \\
+&= \EE_{p_{XY^N}} \left[ H(p_{I \mid XY^N}, q_{I \mid XY_{1:N}}) \right].
+\end{align*}
+So, if we successfully find a solution $\theta^*$ to InfoNCE, we will have
+\begin{align*}
+\frac{f(x,y_i;\theta^*)}{\sum_{k = 1}^N f(x,y_k;\theta^*)} = q_{I \mid XY^N}(i \mid x,y_{1:N};\theta^*) = p_{I \mid XY^N}(i \mid x,y_{1:N}) = \frac{p_{XY}(x,y_i) / p_X(x)p_Y(y_i)}{\sum_{k = 1}^N p_{XY}(x,y_k) / p_X(x)p_Y(y_k)}
+\end{align*}
+for all $(i,x,y_{1:N})$. This means
+\begin{align*}
+f(x,y;\theta^*) \propto \frac{p_{XY}(x,y)}{p_X(x)p_Y(y)}
+\end{align*}
+for all $(x,y)$. Thus,
+\begin{align*}
+\LL_\infonce(\theta^*) = \EE_{p_{IXY_{1:N}}} \left[ - \log \frac{p_{XY}(x,y_i) / p_X(x)p_Y(y_i)}{\sum_{k = 1}^N p_{XY}(x,y_k) / p_X(x)p_Y(y_k)} \right].
+\end{align*}
+From here, we can lower bound the mutual information between $X$ and $Y$.
+
+\newpage
+
+\subsection{Estimating the Mutual Information}
+
+Since
+\begin{align*}
+p_{XY^N \mid I}(x,y_{1:N} \mid i) &= \frac{p_{IXY^N}(i,x,y_{1:N})}{p_{I}(i)} = \frac{p_I(i) p_{XY}(x,y_i) \prod_{j \neq i} p_Y(y_j)}{p_{I}(i)} = p_{XY}(x,y_i) \prod_{j \neq i} p_Y(y_j),
+\end{align*}
+conditioned on $i \sim p_I(i)$, we have (using the notation $y_{k \neq i} = (y_1, \ldots, y_{i - 1}, y_{i + 1}, \ldots, y_N$))
+\begin{align*}
+(x,y_i) \sim p_{XY}, \qquad y_{k \neq i} \sim \prod_{k \neq i} p_Y(y_k).
+\end{align*}
+It follows that
+\begin{align*}
+\LL_\infonce(\theta^*) &= \EE_{p_{IXY^N}} \left[ - \log \frac{p_{XY}(x,y_i) / p_X(x)p_Y(y_i)}{\sum_{k = 1}^N p_{XY}(x,y_k) / p_X(x)p_Y(y_k)} \right] \\
+&= \EE_{p_{IXY^N}} \left[ \log \left( 1 + \frac{p_X(x)p_Y(y_i)}{p_{XY}(x,y_i)} \sum_{k \neq i} \frac{p_{X \mid Y}(x \mid y_k)}{p_X(x)} \right) \right] \\
+&= \EE_{p_I} \left[ \EE_{p_{XY^N \mid I}} \left[ \log \left( 1 + \frac{p_X(x)p_Y(y_i)}{p_{XY}(x,y_i)} \sum_{k \neq i} \frac{p_{X \mid Y}(x \mid y_k)}{p_X(x)} \right) \right] \right] \\
+&= \EE_{i \sim p_I} \left[ \EE_{(x,y_i) \sim p_{XY}} \left[ \EE_{y_{k \neq i} \sim \prod_{k \neq i} p_Y} \left[ \log \left( 1 + \frac{p_X(x)p_Y(y_i)}{p_{XY}(x,y_i)} \sum_{k \neq i} \frac{p_{X \mid Y}(x \mid y_k)}{p_X(x)} \right) \right] \right] \right] \\
+&= \EE_{(x,y_1) \sim p_{XY}} \left[ \EE_{y_{k \neq 1} \sim \prod_{k \neq 1} p_Y} \left[ \log \left( 1 + \frac{p_X(x)p_Y(y_1)}{p_{XY}(x,y_1)} \sum_{k \neq 1} \frac{p_{X \mid Y}(x \mid y_k)}{p_X(x)} \right) \right] \right] \\
+&\geq \EE_{(x,y_1) \sim p_{XY}} \left[ \log\left( 1 + \frac{p_X(x)p_Y(y_1)}{p_{XY}(x,y_1)} \sum_{k \neq 1} \EE_{y_k \sim p_Y} \left[ \frac{p_{X \mid Y}(x \mid y_k)}{p_X(x)} \right] \right) \right] \\
+&= \EE_{(x,y_1) \sim p_{XY}} \left[ \log\left( 1 + \frac{p_X(x)p_Y(y_1)}{p_{XY}(x,y_1)} (N - 1) \right) \right] \\
+&\geq \EE_{(x,y_1) \sim p_{XY}} \left[ \log \frac{p_X(x)p_Y(y_1)}{p_{XY}(x,y_1)} (N - 1) \right] \\
+&= \log(N - 1) - \EE_{(x,y_1) \sim p_{XY}} \left[ \log \frac{p_{XY}(x,y_1)}{p_X(x)p_Y(y_1)} \right] \\
+&= \log(N - 1) - I(X,Y)
+\end{align*}
+where we have used Jensen's inequality at the first inequality. This proves
+\begin{align*}
+I(X,Y) \geq \log(N - 1) - \LL_\infonce(\theta^*)
+\end{align*}
+and this bound becomes tight as $N \rightarrow \infty$. However, $\LL_\infonce(\theta) \geq 0$ for all $\theta$. So, the estimate of mutual information by InfoNCE cannot exceed $\log(N - 1)$.
+
+\textbf{Reference material.}
+\begin{itemize}
+\item \textit{Noise Contrastive Estimation} by Karl Stratos.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
