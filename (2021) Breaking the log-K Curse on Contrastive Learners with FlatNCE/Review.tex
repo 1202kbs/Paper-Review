@@ -148,8 +148,8 @@ This shows that gradient descent on $I_\flatnce$ is equivalent to gradient desce
 \item We also observe that
 \begin{align*}
 I^K_\flatnce(x,y_{1:N} \mid g) &= - \log \frac{1}{K} \sum_{k \neq 1} \exp(g_k - g_1) \\
-&= - \log \frac{\frac{1}{K} \sum_{k \neq i} \exp(g_k)}{\exp(g_1)} \\
-&= \log \frac{\exp(g_1)}{\frac{1}{K} \sum_{k \neq i} \exp(g_k)}
+&= - \log \frac{\frac{1}{K} \sum_{k \neq 1} \exp(g_k)}{\exp(g_1)} \\
+&= \log \frac{\exp(g_1)}{\frac{1}{K} \sum_{k \neq 1} \exp(g_k)}
 \end{align*}
 which is just $I_\infonce(x,y_{1:K} \mid g)$ with the positive pair logit $g_1$ removed from the denominator sum.
 
@@ -233,11 +233,11 @@ for any $v \in \RR$. Setting $v = -e^{-u}$, we get
 \end{align*}
 for any $u \in \RR$. Since
 \begin{align*}
-I^K_\flatnce(x,y_{1:K} \mid g) = - \log \frac{1}{K} \sum_{k \neq 1} \exp(g_k - g_1),
+I^K_\infonce(x,y_{1:K} \mid g) = I^{\oplus,K}_\flatnce(x,y_{1:K} \mid g) = - \log \frac{1}{K} \sum_{k = 1}^K \exp(g_k - g_1),
 \end{align*}
 setting
 \begin{align*}
-t = \frac{1}{K} \sum_{k \neq 1} \exp(g_k - g_1)
+t = \frac{1}{K} \sum_{k = 1}^K \exp(g_k - g_1)
 \end{align*}
 proves the first part of the proposition. The second part can be checked by simple calculation.
 \end{proof}
