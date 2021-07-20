@@ -1,0 +1,283 @@
+\documentclass[10pt]{article}
+
+\usepackage{mathtools}
+\usepackage{fullpage}
+\usepackage{latexsym}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{mathrsfs}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usepackage{bm}
+
+\newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\EE}{\mathbb{E}}
+
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\FF}{\mathcal{F}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KK}{\mathcal{K}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\NN}{\mathcal{N}}
+\newcommand{\OO}{\mathcal{O}}
+
+\newcommand{\data}{\texttt{data}}
+\newcommand{\noise}{\texttt{noise}}
+\newcommand{\joint}{\texttt{joint}}
+\newcommand{\infonce}{\texttt{InfoNCE}}
+\newcommand{\flatnce}{\texttt{FlatNCE}}
+\newcommand{\nce}{\texttt{NCE}}
+\newcommand{\KL}{D_{\text{KL}}}
+\newcommand{\JS}{D_{\text{JS}}}
+\newcommand{\stopg}{\texttt{stop\char`_grad}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\title{Paper Review: Breaking the log-K Curse on Contrastive Learners With FlatNCE}
+\author{Beomsu Kim\footnote{Department of Mathematical Sciences, KAIST. Email \texttt{beomsu.kim@kaist.ac.kr}}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Paper Information.}
+
+\begin{itemize}
+\item Junya Chen et. al. Breaking the log-K Curse on Contrastive Learners With FlatNCE. \\ \underline{arXiv preprint arXiv:2107.01152}, 2021.
+\end{itemize}
+
+\section{Introduction}
+
+\begin{itemize}
+\item There are many unresolved issues with contrastive learning.
+\begin{itemize}
+\item Contrastive learners need a very large number of negative samples to work well.
+\item The bias, variance, and performance tradeoffs are in debate.
+\item There is a lack of training diagnostic tools for contrastive learning.
+\end{itemize}
+\item Our development starts with two simple intuitions.
+\begin{itemize}
+\item The contrasts between positive and negative data should be as large as possible.
+\item The objective should be properly normalized to yield minimal variance.
+\end{itemize}
+\end{itemize}
+
+\newpage
+
+\section{Contrastive Representation Learning with InfoNCE}
+
+\begin{itemize}
+\item With $y_{1:K} = (y_1, \ldots, y_K)$, define
+\begin{align*}
+p_{XY^K}(x,y_{1:K}) = p_{XY}(x,y_1) \prod_{k \neq 1} p_Y(y_k).
+\end{align*}
+This means $(x,y_1) \sim p_{XY}$ and $(x,y_k) \sim p_X \otimes p_Y$ for $k \neq 1$.
+\item Let $g(x,y)$ be a parametrized function, such as a neural network.
+\item Given $(x,y_{1:K}) \sim p_{XY^N}$, define $g_k = g(x,y_k)$ for $k = 1, \ldots, K$. Also, define
+\begin{align*}
+I_\infonce^K(x,y_{1:K} \mid g) = \log \frac{\exp(g_1)}{\frac{1}{K} \sum_{k = 1}^K \exp(g_k) },
+\end{align*}
+and
+\begin{align*}
+I_\infonce^K(X;Y \mid g) = \EE_{p_{XY^K}} \left[ I_\infonce^K(x,y_{1:K} \mid g) \right]
+\end{align*}
+and
+\begin{align*}
+I_\infonce^K(X;Y) = \max_g \ I_\infonce^K(X;Y \mid g).
+\end{align*}
+Note that $g_1$ is the logit for the \enquote{positive pair} and $g_k$ for $k \neq 1$ are the logits for the \enquote{negative pairs}.
+\item We also define
+\begin{align*}
+I_\infonce(x,y_{1:K} \mid g) = - \log \frac{\exp(g_1)}{\sum_{k = 1}^K \exp(g_k)}
+\end{align*}
+such that
+\begin{align*}
+I^K_\infonce(x,y_{1:K} \mid g) = -I_\infonce(x,y_{1:K} \mid g) + \log K.
+\end{align*}
+\end{itemize}
+
+\textbf{Proposition 2.1.} $I_\infonce^K(X;Y)$ \textit{is an asymptotically tight lower bound to mutual information, i.e.,}
+\begin{align*}
+I(X;Y) \geq I_\infonce^K(X;Y \mid g), \qquad \lim_{K \rightarrow \infty} I_\infonce^K(X;Y) \rightarrow I(X;Y).
+\end{align*}
+\begin{proof}
+See my paper review on InfoNCE.
+\end{proof}
+
+\newpage
+
+\section{FlatNCE and Generalized Contrastive Representation Learning}
+
+\begin{itemize}
+\item Define
+\begin{align*}
+I_\flatnce(x,y_{1:K} \mid g) = \frac{\sum_{k \neq 1} \exp(g_k - g_1)}{\stopg[\sum_{k \neq 1} \exp(g_k - g_1)]}
+\end{align*}
+and
+\begin{align*}
+I^K_\flatnce(x,y_{1:K} \mid g) = - \log \frac{1}{K} \sum_{k \neq 1} \exp(g_k - g_1).
+\end{align*}
+\item We observe that
+\begin{align*}
+\sum_{k \neq 1} \exp(g_k - g_1) = \left( \frac{\exp(g_1)}{\sum_{k \neq 1} \exp(g_k)} \right)^{-1}
+\end{align*}
+and so (the gradient is w.r.t. the parameters of $g$)
+\begin{align*}
+\nabla I_\flatnce(x,y_{1:K} \mid g) &= \frac{\nabla \sum_{k \neq 1} \exp(g_k - g_1)}{\stopg[\sum_{k \neq 1} \exp(g_k - g_1)]} \\
+&= \nabla \log \sum_{k \neq 1} \exp(g_k - g_1) \\
+&= \nabla \log \frac{1}{K} \sum_{k \neq 1} \exp(g_k - g_1) \\
+&= - \nabla I^K_\flatnce(x,y_{1:N} \mid g).
+\end{align*}
+This shows that gradient descent on $I_\flatnce$ is equivalent to gradient descent on $I^{\oplus,K}_\flatnce$.
+\item We also observe that
+\begin{align*}
+I^K_\flatnce(x,y_{1:N} \mid g) &= - \log \frac{1}{K} \sum_{k \neq 1} \exp(g_k - g_1) \\
+&= - \log \frac{\frac{1}{K} \sum_{k \neq i} \exp(g_k)}{\exp(g_1)} \\
+&= \log \frac{\exp(g_1)}{\frac{1}{K} \sum_{k \neq i} \exp(g_k)}
+\end{align*}
+which is just $I_\infonce(x,y_{1:K} \mid g)$ with the positive pair logit $g_1$ removed from the denominator sum.
+
+\newpage
+
+\item Define
+\begin{align*}
+I^\oplus_\flatnce(x,y_{1:K} \mid g) = \frac{\sum_{k = 1}^K \exp(g_k - g_1)}{\stopg[\sum_{k = 1}^K \exp(g_k - g_1)]}
+\end{align*}
+and
+\begin{align*}
+I^{\oplus,K}_\flatnce(x,y_{1:K} \mid g) = - \log \frac{1}{K} \sum_{k = 1}^K \exp(g_k - g_1).
+\end{align*}
+\item Similar to $I_\flatnce$, we have
+\begin{align*}
+\nabla I^\oplus_\flatnce(x,y_{1:K} \mid g) = - \nabla I^{\oplus,K}_\flatnce(x,y_{1:K} \mid g)
+\end{align*}
+and also
+\begin{align*}
+I^{\oplus,K}_\flatnce(x,y_{1:K} \mid g) = \log \frac{\exp(g_1)}{\frac{1}{K} \sum_{k = 1}^K \exp(g_k) } = I_\infonce^K(x,y_{1:K} \mid g).
+\end{align*}
+which shows that gradient ascent on $I^\oplus_\flatnce$ is equivalent to gradient descent on $I_\infonce^K$.
+\end{itemize}
+
+\textbf{Proposition 3.1.} $\nabla I^\oplus_\flatnce(x,y_{1:K} \mid g) = \nabla I_\infonce(x,y_{1:K} \mid g)$.
+\begin{proof}
+Since (see Section 2)
+\begin{align*}
+I^K_\infonce(x,y_{1:K} \mid g) = -I_\infonce(x,y_{1:K} \mid g) + \log K,
+\end{align*}
+we have (see the above bullet)
+\begin{align*}
+\nabla I^\oplus_\flatnce(x,y_{1:K} \mid g) = - \nabla I^{\oplus,K}_\flatnce(x,y_{1:K} \mid g) = - \nabla I_\infonce^K(x,y_{1:K} \mid g) = \nabla I_\infonce(x,y_{1:K} \mid g).
+\end{align*}
+This concludes the proof.
+\end{proof}
+
+\textbf{Proposition 3.2.} \textit{The gradient of} $I_\flatnce(x,y_{1:K} \mid g)$ \textit{is an importance-weighted estimator of the form}
+\begin{align*}
+\nabla I_\flatnce(x,y_{1:K} \mid g) = \sum_{k \neq 1} w_k \nabla g_k - \nabla g_1, \qquad w_k = \frac{\exp(g_k)}{\sum_{k' \neq 1} \exp(g_{k'})}.
+\end{align*}
+\begin{proof}
+Observe that
+\begin{align*}
+\nabla I_\flatnce(x,y_{1:K} \mid g) &= \frac{\nabla \sum_{k \neq 1} \exp(g_k - g_1)}{\sum_{k \neq 1} \exp(g_k - g_1)} \\
+&= \sum_{k \neq 1} \frac{\exp(g_k - g_1)}{\sum_{k' \neq 1} \exp(g_{k'} - g_1)} (\nabla g_k - \nabla g_1) \\
+&= \sum_{k \neq 1} \frac{\exp(g_k)}{\sum_{k' \neq 1} \exp(g_{k'})} (\nabla g_k - \nabla g_1) \\
+&= \sum_{k \neq 1} w_k (\nabla g_k - \nabla g_1) \\
+&= \sum_{k \neq 1} \nabla g_k - \nabla g_1
+\end{align*}
+since $\sum_{k \neq 1} w_k = 1$.
+\end{proof}
+
+\newpage
+
+\begin{itemize}
+\item In FlatNCE, larger weights will be assigned to the more challenging negative examples in the batch.
+\item The authors claim FlatNCE is also a formal MI lower bound using the below Lemma.
+\end{itemize}
+
+\textbf{Lemma 3.3.} \textit{For arbitrary $u \in \RR$, we have}
+\begin{align*}
+I^K_\infonce(x,y_{1:K} \mid g) \geq 1 - u - \frac{1}{K} \sum_{k = 1}^K \exp(-u + g_k - g_1)
+\end{align*}
+\textit{and the inequality holds when}
+\begin{align*}
+u = \stopg \left[ \log \frac{1}{K} \sum_{k = 1}^K \exp(g_k - g_1) \right] = \stopg \left[ -I^K_\infonce(x,y_{1:K} \mid g) \right].
+\end{align*}
+\begin{proof}
+The Fenchel-Legendre dual for $f(t) = - \log t$ is $f^*(v) = -1 - \log(-v)$. That is,
+\begin{align*}
+f(t) = \sup_{v \in \RR} \ \{vt - f^*(v)\}
+\end{align*}
+and so
+\begin{align*}
+- \log t \geq vt + 1 + \log(-v)
+\end{align*}
+for any $v \in \RR$. Setting $v = -e^{-u}$, we get
+\begin{align*}
+- \log t \geq 1 - u - e^{-u} t
+\end{align*}
+for any $u \in \RR$. Since
+\begin{align*}
+I^K_\flatnce(x,y_{1:K} \mid g) = - \log \frac{1}{K} \sum_{k \neq 1} \exp(g_k - g_1),
+\end{align*}
+setting
+\begin{align*}
+t = \frac{1}{K} \sum_{k \neq 1} \exp(g_k - g_1)
+\end{align*}
+proves the first part of the proposition. The second part can be checked by simple calculation.
+\end{proof}
+
+\textbf{Corollary 3.4.} $\EE_{p_{XY^N}} \left[ I^K_\flatnce(x,y_{1:K} \mid g) \right] \leq I(X;Y)$.
+\begin{proof}
+Plugging in the optimal value of $u$ in the above Lemma, we have
+\begin{align*}
+I^K_\infonce(x,y_{1:K} \mid g) = 1 + \stopg \left[ I^K_\infonce(x,y_{1:K} \mid g) \right] - I^\oplus_\flatnce(x,y_{1:K} \mid g).
+\end{align*}
+Since the first two terms at the RHS are constant w.r.t. the parameters of $g$, the authors claim that the claimed inequality holds up to a constant.
+\end{proof}
+
+\begin{itemize}
+\item In my opinion, Lemma 3.3 and Corollary 3.4. contribute essentially nothing to the paper, since it is about $I^\oplus_\flatnce$ (which has the same gradients as $I^K_\infonce$ and so suffers from the same gradient vanishing problem).
+\item If the authors wanted to make a valid contribution, they should have provided analyses about $I_\flatnce$, not $I^\oplus_\flatnce$. The authors claim in the footnote that we can similarly show $I_\flatnce$ lower bounds mutual information, but they do not provide any proofs.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
