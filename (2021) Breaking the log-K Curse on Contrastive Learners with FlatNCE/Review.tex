@@ -248,13 +248,8 @@ Plugging in the optimal value of $u$ in the above Lemma, we have
 \begin{align*}
 I^K_\infonce(x,y_{1:K} \mid g) = 1 + \stopg \left[ I^K_\infonce(x,y_{1:K} \mid g) \right] - I^\oplus_\flatnce(x,y_{1:K} \mid g).
 \end{align*}
-Since the first two terms at the RHS are constant w.r.t. the parameters of $g$, the authors claim that the claimed inequality holds up to a constant.
+Since the first two terms at the RHS are constant w.r.t. the parameters of $g$, the authors claim that the claimed inequality holds up to a constant. However, the above inequality is about $I^\oplus_\flatnce$, not $I^K_\flatnce$, so I don't think the proof is correct.
 \end{proof}
-
-\begin{itemize}
-\item In my opinion, Lemma 3.3 and Corollary 3.4. contribute essentially nothing to the paper, since it is about $I^\oplus_\flatnce$ (which has the same gradients as $I^K_\infonce$ and so suffers from the same gradient vanishing problem).
-\item If the authors wanted to make a valid contribution, they should have provided analyses about $I_\flatnce$, not $I^\oplus_\flatnce$. The authors claim in the footnote that we can similarly show $I_\flatnce$ lower bounds mutual information, but they do not provide any proofs.
-\end{itemize}
 
 
 
