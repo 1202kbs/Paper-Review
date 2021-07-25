@@ -1,0 +1,180 @@
+\documentclass[10pt]{article}
+
+\usepackage{mathtools}
+\usepackage{fullpage}
+\usepackage{latexsym}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{mathrsfs}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usepackage{bm}
+
+\newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
+
+\newcommand{\ZZ}{\mathbb{Z}}
+\newcommand{\QQ}{\mathbb{Q}}
+\newcommand{\RR}{\mathbb{R}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\EE}{\mathbb{E}}
+
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\FF}{\mathcal{F}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KK}{\mathcal{K}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\NN}{\mathcal{N}}
+\newcommand{\OO}{\mathcal{O}}
+\newcommand{\TT}{\mathcal{T}}
+
+\newcommand{\bt}{{\texttt{BT}}}
+\newcommand{\ib}{{\texttt{IB}}}
+\newcommand{\KL}{D_{\text{KL}}}
+\newcommand{\JS}{D_{\text{JS}}}
+\newcommand{\infonce}{\texttt{InfoNCE}}
+\newcommand{\stopg}{\texttt{stop\char`_grad}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\title{Paper Review: Barlow Twins}
+\author{Beomsu Kim\footnote{Department of Mathematical Sciences, KAIST. Email \texttt{beomsu.kim@kaist.ac.kr}}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Paper Information.}
+
+\begin{itemize}
+\item Jure Zbontar et. al. Barlow Twins: Self-Supervised Learning via Redundancy Reduction. \\ \underline{arXiv preprint arXiv:2103.03230}, 2021.
+\end{itemize}
+
+\section{Introduction}
+
+\begin{itemize}
+\item In this paper, we propose a new method, \textit{Barlow Twins}, which applies redundancy reduction --- a principle first proposed in neuroscience --- to self-supervised learning.
+\item In his influential article \textit{Possible Principles Underlying the Transformation of Sensory Messages}, neuroscientist H. Barlow hypothesized that the goal of sensory processing is to recode highly redundant sensory inputs into a factorial code (a code with statistically independent components).
+\item Based on this principle, we propose an objective function which tries to make the cross-correlation matrix computed from twin embeddings as closed to the identity matrix as possible.
+\end{itemize}
+
+\section{Method}
+
+\begin{itemize}
+\item Like other methods for SSL, Barlow Twins operates on a joint embedding of distorted images.
+\item It produces two distorted views for all images of a batch $X$ sampled from a dataset.
+\item The distorted views are obtained via a distribution of data augmentations $\TT$.
+\item The two batches of distorted views $Y^A$ and $Y^B$ are then fed to a function $f_\theta$, typically a deep network with trainable parameters $\theta$, producing batches of embeddings $Z^A$ and $Z^B$, respectively.
+\item To simply notations, $Z^A$ and $Z^B$ are assumed to be mean-centered along the batch dimension, such that each unit has mean output 0 over the batch.
+\item Barlow Twins distinguishes itself from other methods by innovative loss function
+\begin{align*}
+\LL_\bt = \underbrace{\sum_i (1 - \CC_{ii})^2}_{\text{invariance term}} + \underbrace{\lambda \cdot \sum_i \sum_{j \neq i} \CC_{ij}^2}_{\text{redundancy reduction term}}
+\end{align*}
+where $\CC$ is the cross-correlation matrix
+\begin{align*}
+\CC_{ij} = \frac{\langle Z^A_{\cdot,i}, Z^B_{\cdot,j} \rangle}{\| Z^A_{\cdot,i} \| \| Z^B_{\cdot,j} \|}
+\end{align*}
+where $Z^A_{\cdot,i}$ denotes the $i$th column of $Z^A$ (and likewise for $Z^B_{\cdot,j}$).
+\item $\CC$ is a square matrix with size the dimension of the network's output, and with values between $-1$ (perfect anti-correlation) and $1$ (perfect correlation).
+\item Intuitively, the invariance term of the objective, by trying to equate the diagonal elements of the cross-correlation matrix to 1, makes the embeddings invariant to the distortions applied.
+\item The redundancy reduction term, by trying to equate the off-diagonal elements of the cross-correlation matrix to 0, decorrelates the different vector components of the embedding.
+\item More formally, Barlow Twins' objective can be understood through the lens of information theory, and specifically as an instantiation of the Information Bottleneck (IB) objective.
+\item Applied to self-supervised learning, the IB principle posits that a desirable representation should be as informative as possible about the sample represented while being as invariant as possible to distortions of that sample.
+\item This trade-off is captured by the following loss function
+\begin{align*}
+\LL_\ib(\theta) = I(Z_\theta,Y) - \beta I(Z_\theta,X).
+\end{align*}
+Here, $X$ denotes images, $Y$ denotes transformed images, and $Z_\theta$ denotes representations, i.e.,
+\begin{center}
+\begin{tikzcd}
+X \arrow[r, "T \sim \TT"] & Y \arrow[r, "f_\theta"] & Z_\theta.
+\end{tikzcd}
+\end{center}
+\item Using a classical identity for mutual information, we can rewrite $\LL_\ib(\theta)$ as
+\begin{align*}
+\LL_\ib(\theta) = [H(Z_\theta) - H(Z_\theta \mid Y)] - \beta[ H(Z_\theta) - H(Z_\theta \mid X)]
+\end{align*}
+and $H(Z_\theta \mid Y) = 0$ since $Z_\theta$ is a deterministic function of $Y$. It follows that
+\begin{align*}
+\LL_\ib(\theta) = H(Z_\theta \mid X) + \frac{1 - \beta}{\beta} H(Z_\theta).
+\end{align*}
+\item In the case $\beta \leq 1$, the minimum of $\LL_\ib(\theta)$ occurs when the representation is set to a constant that does not depend on the input. For then, $H(Z_\theta \mid X) = H(Z_\theta) = 0$.
+\item In the case $\beta > 1$, $(1 - \beta) / \beta$ becomes negative, so we can replace it by $-\lambda$ for some $\lambda > 0$.
+\begin{align*}
+\LL_\ib(\theta) = H(Z_\theta \mid X) - \lambda H(Z_\theta).
+\end{align*}
+\item Small $H(Z_\theta \mid X)$ means $Z_\theta$ is nearly a deterministic function of $X$, i.e., $Z_\theta$ is invariant to $T \sim \TT$. This corresponds to the goal of the invariance term in $\LL_\bt(\theta)$.
+\item Large $H(Z_\theta)$ means $Z_\theta$ takes on a diverse set of values. This corresponds to the goal of the redundancy reduction term in $\LL_\bt(\theta)$. Rigorously speaking, for direct correspondence between $H(Z_\theta)$ and the redundancy reduction term in $\LL_\bt(\theta)$, the redundancy reduction term should be computed from the autocorrelation matrix of one of the twin networks, instead of the cross-correlation matrix between two networks. In practice, we do not see a strong difference in performance between these two alternatives.
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
