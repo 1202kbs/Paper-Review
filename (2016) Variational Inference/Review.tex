@@ -276,7 +276,6 @@ which is the only term in the $\elbo[q^*,\bm{\theta}]$ depending on $\bm{\theta}
 \end{align*}
 \item Set $q$ and $\bm{\theta}$ as $q^*$ and $\bm{\theta}^*$ and repeat the above two steps.
 \end{itemize}
-\item In the E step, we tighten the lower bound, and in the M step, we choose $\bm{\theta}$ maximizing the lower bound.
 \item This indeed increases $\log p(\bm{x} \mid \bm{\theta})$ since
 \begin{align*}
 \log p(\bm{x} \mid \bm{\theta}) &= \elbo[q,\bm{\theta}] + \KL(q(\bm{y}) \| p(\bm{y} \mid \bm{x}, \bm{\theta})) \\

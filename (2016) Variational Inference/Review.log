@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.12) (preloaded format=pdflatex 2021.1.15)  1 AUG 2021 22:48
+This is pdfTeX, Version 3.14159265-2.6-1.40.21 (MiKTeX 20.12) (preloaded format=pdflatex 2021.1.15)  1 AUG 2021 23:27
 entering extended mode
 **./Review.tex
 (Review.tex
@@ -738,11 +738,11 @@ LaTeX Font Info:    Font shape `OT1/cmtt/bx/n' in size <12> not available
 [4] [5] [6] [7] [8]
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 454.
+(hyperref)                removing `math shift' on input line 453.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (PDFDocEncoding):
-(hyperref)                removing `math shift' on input line 454.
+(hyperref)                removing `math shift' on input line 453.
 
 [9] (Review.aux)
 Package rerunfilecheck Info: File `Review.out' has not changed.
@@ -778,7 +778,7 @@ c/amsfonts/cm/cmsy8.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmti10.pfb><C
 /amsfonts/cm/cmtt10.pfb><C:/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt12.pfb><C
 :/MiKTeX/fonts/type1/public/amsfonts/cm/cmtt8.pfb><C:/MiKTeX/fonts/type1/public
 /amsfonts/symbols/msbm10.pfb>
-Output written on Review.pdf (9 pages, 319485 bytes).
+Output written on Review.pdf (9 pages, 319405 bytes).
 PDF statistics:
  255 PDF objects out of 1000 (max. 8388607)
  32 named destinations out of 1000 (max. 500000)
