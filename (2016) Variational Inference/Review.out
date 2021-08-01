@@ -1,0 +1,13 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Variational Inference}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Approach 1: Evidence Lower Bound \(ELBO\)}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Approach 2: Posterior Approximation}{section.2}% 4
+\BOOKMARK [1][-]{section.3}{Mean-Field Variational Inference}{}% 5
+\BOOKMARK [2][-]{subsection.3.1}{Coordinate Ascent Mean-Field Variational Inference \(CAVI\)}{section.3}% 6
+\BOOKMARK [1][-]{section.4}{Expectation Maximization \(EM\)}{}% 7
+\BOOKMARK [2][-]{subsection.4.1}{EM for MLE}{section.4}% 8
+\BOOKMARK [2][-]{subsection.4.2}{EM for MAP Estimation}{section.4}% 9
+\BOOKMARK [1][-]{section.5}{Variational EM}{}% 10
+\BOOKMARK [1][-]{appendix.A}{Calculus of Variations}{}% 11
+\BOOKMARK [2][-]{subsection.A.1}{Preliminaries}{appendix.A}% 12
+\BOOKMARK [2][-]{subsection.A.2}{Finding the Maximizer of ELBO}{appendix.A}% 13

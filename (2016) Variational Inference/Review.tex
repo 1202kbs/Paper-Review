@@ -1,0 +1,557 @@
+\documentclass[10pt]{article}
+
+\usepackage{mathtools}
+\usepackage{fullpage}
+\usepackage{latexsym}
+\usepackage{csquotes}
+\usepackage{enumitem}
+\usepackage{mathrsfs}
+\usepackage{hyperref}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{gensymb}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage{amsthm}
+\usepackage{tikz}
+\usepackage{bm}
+
+\newenvironment{solution}{\textit{Solution.}}{\hfill$\square$}
+
+
+\newcommand{\EE}{\mathbb{E}}
+
+\newcommand{\CC}{\mathcal{C}}
+\newcommand{\FF}{\mathcal{F}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\KK}{\mathcal{K}}
+\newcommand{\LL}{\mathcal{L}}
+\newcommand{\MM}{\mathcal{M}}
+\newcommand{\NN}{\mathcal{N}}
+\newcommand{\OO}{\mathcal{O}}
+\newcommand{\QQ}{\mathcal{Q}}
+
+\newcommand{\lbo}{\texttt{LBO}}
+\newcommand{\elbo}{\texttt{ELBO}}
+\newcommand{\KL}{D_{\text{KL}}}
+\newcommand{\JS}{D_{\text{JS}}}
+\newcommand{\stopg}{\texttt{stop\char`_grad}}
+
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator*{\argmin}{arg\,min}
+
+
+\title{Paper Review: Variational Inference}
+\author{Beomsu Kim\footnote{Department of Mathematical Sciences, KAIST. Email \texttt{beomsu.kim@kaist.ac.kr}}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\textbf{Paper Information.}
+
+\begin{itemize}
+\item David M. Blei et. al. Variational Inference: A Review for Statisticians. \\ \underline{arXiv preprint arXiv:1601.00670}, 2016.
+\end{itemize}
+
+\section{Introduction}
+
+\begin{itemize}
+\item A core problem of modern statistics is to approximate difficult-to-compute probability densities.
+\item Consider a joint density of latent variables $\bm{z} = z_{1:m}$ and observations $\bm{x} = x_{1:n}$
+\begin{align*}
+p(\bm{z},\bm{x}) = p(\bm{z}) p(\bm{x} \mid \bm{z}).
+\end{align*}
+A Bayesian model draws the latent variables from a prior density $p(\bm{z})$ and then relates them back to the observations through the likelihood $p(\bm{x} \mid \bm{z})$.
+\item Inference amounts to conditioning on the data and computing the posterior $p(\bm{z} \mid \bm{x})$.
+\item In complex or high-dimensional Bayesian models, this computation is often intractable.
+\item There are two approaches to approximate inference: MCMC and variational inference.
+\begin{itemize}
+\item MCMC first constructs an ergodic Markov chain on $\bm{z}$ whose stationary distribution is the posterior $p(\bm{z} \mid \bm{x})$. Then, we sample from the chain to collect samples from the stationary distribution.
+\item Variational inference uses a family of tractable\footnote{A distribution is \textit{tractable} if it has a closed form density function or we can easily sample from it.} distributions $\QQ$ to approximate $p(\bm{z} \mid \bm{x})$. Equivalently, variational inference uses $\QQ$ to approximate $p(\bm{x})$.\footnote{Approximating $p(\bm{z} \mid \bm{x})$ is equivalent to approximating $p(\bm{x})$ since $p(\bm{z} \mid \bm{x}) = p(\bm{z},\bm{x}) / p(\bm{x})$.}
+\end{itemize}
+\item Comparing variational inference and MCMC.
+\begin{itemize}
+\item MCMC methods tend to be more computationally expensive than variational inference, but they also provide guarantees of producing (asymptotically) exact samples from the target density.
+\item Variational inference does not enjoy such guarantees---it can only find a density close to the target---but tends to be faster than MCMC. Because it rests on optimization, variational inference easily takes advantage of methods like stochastic optimization and distributed optimization.
+\end{itemize}
+\item In the following sections, I omit examples for clarity of exposition. Please read the reference materials for detailed examples.
+\end{itemize}
+
+\newpage
+
+\section{Variational Inference}
+
+\begin{itemize}
+\item Let $\bm{x} = x_{1:n}$ be a set of observed variables and $\bm{z} = z_{1:m}$ be a set of latent variables with joint density
+\begin{align*}
+p(\bm{z},\bm{x}).
+\end{align*}
+\item The \textit{inference problem} is to compute the conditional density of $\bm{z}$ given $\bm{x}$
+\begin{align*}
+p(\bm{z} \mid \bm{x}) = \frac{p(\bm{z},\bm{x})}{p(\bm{x})}.
+\end{align*}
+The denominator is called the \textit{evidence}. We calculate it by marginalizing out the latent variables
+\begin{align*}
+p(\bm{x}) = \int p(\bm{z},\bm{x}) \, d\bm{z}.
+\end{align*}
+For many models, the evidence integral is unavailable in closed form or requires exponential (w.r.t. the dimension $n$) time to compute. This is why inference in such models is hard.
+\item Hence, we resort to approximate inference. There are two equivalent approaches.
+\end{itemize}
+
+\subsection{Approach 1: Evidence Lower Bound (\elbo)} \label{sec:elbo}
+
+\begin{itemize}
+\item Assuming we have $p(\bm{z},\bm{x})$, calculating $p(\bm{z} \mid \bm{x})$ is equivalent to calculating $p(\bm{x})$.
+\item Instead of directly calculating $p(\bm{x})$, we maximize a lower bound of $p(\bm{x})$.
+\item Specifically, we first define a \textit{variational family} $\QQ$ of tractable densities over the latent variables.
+\item Then, for any $q(\bm{z}) \in \QQ$,
+\begin{align*}
+\log p(\bm{x}) &= \log \int p(\bm{z},\bm{x}) \, d\bm{z} \\
+&= \log \EE_{q(\bm{z})} \left[ \frac{p(\bm{z},\bm{x})}{q(\bm{z})} \right] \\
+&\geq \EE_{q(\bm{z})} \left[ \log \frac{p(\bm{z},\bm{x})}{q(\bm{z})} \right] \\
+&= \EE_{q(\bm{z})} [ \log p(\bm{z},\bm{x}) ] - \EE_{q(\bm{z})} [\log q(\bm{z})] \\
+&= \elbo[q]
+\end{align*}
+where we have used Jensen's inequality at the fourth line. $\elbo$ is defined as
+\begin{align} \label{eq:elbo1}
+\elbo[q] = \EE_{q(\bm{z})} [ \log p(\bm{z},\bm{x}) ] - \EE_{q(\bm{z})} [\log q(\bm{z})]
+\end{align}
+and it lower bounds the (log) evidence $p(\bm{x})$. From here comes its name \enquote{evidence lower bound}.
+\item We can also obtain $\elbo$ by the following process.
+\begin{align} \label{eq:elbomax}
+\log p(\bm{x}) &= \int q(\bm{z}) \log p(\bm{x}) \, d\bm{z} \nonumber \\
+&= \int q(\bm{z}) \log \frac{p(\bm{z},\bm{x})}{p(\bm{z} \mid \bm{x})} \, d\bm{z} \nonumber \\
+&= \int q(\bm{z}) \log \frac{p(\bm{z},\bm{x})}{q(\bm{z})} \cdot \frac{q(\bm{z})}{p(\bm{z} \mid \bm{x})} \, d\bm{z} \nonumber \\
+&= \EE_{q(\bm{z})} [ \log p(\bm{z},\bm{x}) ] - \EE_{q(\bm{z})} [\log q(\bm{z})] + \KL(q(\bm{z}) \| p(\bm{z} \mid \bm{x})) \nonumber \\
+&= \elbo[q] + \KL(q(\bm{z}) \| p(\bm{z} \mid \bm{x})) \\
+&\geq \elbo[q]. \nonumber
+\end{align}
+\item Hence, we can solve the optimization problem
+\begin{align*}
+\max_{q(\bm{z}) \in \QQ} \ \elbo[q]
+\end{align*}
+to obtain the best approximation to $\log p(\bm{x})$.
+\item Equation \eqref{eq:elbomax} shows that $\elbo$ is maximized when $q(\bm{z}) = p(\bm{z} \mid \bm{x})$.
+\item Calculus of variations can also be used to prove that $q(\bm{z}) = p(\bm{x} \mid \bm{z})$ maximizes the $\elbo$.
+\item For a detailed proof, see Appendix \ref{append:varelbo}.
+\item We also observe that
+\begin{align} \label{eq:elbo2}
+\elbo[q] &= \EE_{q(\bm{z})} [ \log p(\bm{z},\bm{x}) ] - \EE_{q(\bm{z})} [\log q(\bm{z})] \nonumber \\
+&= \EE_{q(\bm{z})}[\log p(\bm{x} \mid \bm{z})] + \EE_{q(\bm{z})}[ \log p(\bm{z}) ] - \EE_{q(\bm{z})} [\log q(\bm{z})] \nonumber \\
+&= \EE_{q(\bm{z})}[\log p(\bm{x} \mid \bm{z})] - \KL(q(\bm{z}) \| p(\bm{z})).
+\end{align}
+\item The first term is an expected likelihood, and it encourages densities that place their mass on configurations of the latent variables that explain the observed data.
+\item The second term is the negative divergence between the variational density and the prior; it encourages densities close to the prior.
+\end{itemize}
+
+\subsection{Approach 2: Posterior Approximation}
+
+\begin{itemize}
+\item We specify a family $\QQ$ of densities over the latent variables.
+\item Each candidate $q(\bm{z}) \in \QQ$ is a candidate approximation to the exact conditional $p(\bm{z} \mid \bm{x})$.
+\item Inference now amounts to solving the following optimization problem
+\begin{align*}
+q^*(\bm{z}) &= \argmin_{q(\bm{z}) \in \QQ} \KL(q(\bm{z}) \| p(\bm{z} \mid \bm{x})) \\
+&= \argmin_{q(\bm{z}) \in \QQ} \EE_{q(\bm{z})}[ \log q(\bm{z}) ] - \EE_{q(\bm{z})}[\log p(\bm{z} \mid \bm{x})] \\
+&= \argmin_{q(\bm{z}) \in \QQ} \EE_{q(\bm{z})}[ \log q(\bm{z}) ] - \EE_{q(\bm{z})}[\log p(\bm{z}, \bm{x})] + \log p(\bm{x}) \\
+&= \argmin_{q(\bm{z}) \in \QQ} \EE_{q(\bm{z})}[ \log q(\bm{z}) ] - \EE_{q(\bm{z})}[\log p(\bm{z}, \bm{x})] \\
+&= \argmin_{q(\bm{z}) \in \QQ} - \elbo[q] \\
+&= \argmax_{q(\bm{z}) \in \QQ} \elbo[q].
+\end{align*}
+\item Once found, $q^*(\bm{z})$ is the best approximation of the conditional, within the family $\QQ$.
+\item The complexity of the family determines the complexity of this optimization.
+\item Since
+\begin{align*}
+\argmin_{q(\bm{z}) \in \QQ} \KL(q(\bm{z}) \| p(\bm{z} \mid \bm{x})) = \argmax_{q(\bm{z}) \in \QQ} \elbo[q],
+\end{align*}
+approaches 1 and 2 are equivalent.
+\end{itemize}
+
+\newpage
+
+\section{Mean-Field Variational Inference}
+
+\begin{itemize}
+\item We now know we can do approximate inference by maximizing the $\elbo$ w.r.t. a variational family $\QQ$.
+\item We give an example of a variational family $\QQ$ that is often used in the literature.
+\item We focus on the \textit{mean-field variational family}, where the latent variables are mutual independent and each governed by a distinct factor in the variational density.
+\begin{align} \label{eq:mf}
+q(\bm{z}) = \prod_{j = 1}^m q_j(z_j).
+\end{align}
+Each latent variable $z_j$ is governed by its own variational factor, the density $q_j(z_j)$.
+\end{itemize}
+
+\subsection{Coordinate Ascent Mean-Field Variational Inference (CAVI)} \label{sec:cavi}
+
+\begin{itemize}
+\item CAVI optimizes each factor of the mean-field variational density, while holding the others fixed.
+\item It climbs the $\elbo$ to a local maximum.
+\item Define
+\begin{align*}
+\bm{z}_{-j} = (z_1, \ldots, z_{j - 1},z_{j + 1}, \ldots, z_m), \qquad q_{-j}(\bm{z}_{-j}) = \prod_{\ell \neq j} q_j(z_j).
+\end{align*}
+\item The \textit{complete conditional} of $z_j$ is its conditional density given all of the other latent variables in the model and the observations $p(z_j \mid \bm{z}_{-j}, \bm{x})$.
+\item The CAVI update is given by
+\begin{align} \label{eq:cavi1}
+q^*_j(z_j) \propto \exp\left\{ \EE_{q_{-j}(\bm{z}_{-j})}[ \log p(z_j \mid \bm{z}_{-j}, \bm{x})] \right\}.
+\end{align}
+Equivalently, Equation \eqref{eq:cavi1} is proportional to
+\begin{align} \label{eq:cavi2}
+q^*_j(z_j) \propto \exp\left\{ \EE_{q_{-j}(\bm{z}_{-j})}[ \log p(z_j, \bm{z}_{-j}, \bm{x}) ] \right\}.
+\end{align}
+Because of the mean-field family assumption, the expectations of on the RHS do not involve the $j$th variational factor. Thus this is a valid coordinate update.
+\item We now derive the CAVI update. Specifically, define
+\begin{align*}
+Z[q_{-j}] = \int \exp\left\{ \EE_{q_{-j}(\bm{z}_{-j})}[ \log p(z_j, \bm{z}_{-j}, \bm{x}) ] \right\} \, dz_j
+\end{align*}
+such that
+\begin{align*}
+q_j^*(z_j) = \frac{1}{Z[q_{-j}]} \exp\left\{ \EE_{q_{-j}(\bm{z}_{-j})}[ \log p(z_j, \bm{z}_{-j}, \bm{x}) ] \right\}
+\end{align*}
+and we rewrite the $\elbo$ as a functional of $q_j$.
+\begin{align*}
+\elbo[q_j] &= \EE_{q(\bm{z})} [ \log p(\bm{z},\bm{x}) ] - \EE_{q(\bm{z})} [\log q(\bm{z})] \\
+&= \EE_{q(\bm{z})} [ \log p(\bm{z},\bm{x}) ] - \EE_{q(\bm{z})} [\log q_j(z)] - \EE_{q(\bm{z})} [\log q_{-j}(\bm{z}_{-j})] \\
+&= \EE_{q_j(z_j)} \left[ \EE_{q_{-j}(\bm{z}_{-j})} [ \log p(z_j, \bm{z}_{-j}, \bm{x}) ] \right] - \EE_{q_j(z_j)} [\log q_j(z)] - \EE_{q_{-j}(\bm{z}_{-j})} [\log q_{-j}(\bm{z}_{-j})] \\
+&= \EE_{q_j(z_j)} \left[ \log q^*_j(z_j) \right] - \EE_{q_j(z_j)} [\log q_j(z)] - \EE_{q_{-j}(\bm{z}_{-j})} [\log q_{-j}(\bm{z}_{-j})] + Z[q_{-j}] \\
+&= -\KL(q^*_j(z_j) \| q_j(z_j)) - \EE_{q_{-j}(\bm{z}_{-j})} [\log q_{-j}(\bm{z}_{-j})] + Z[q_{-j}].
+\end{align*}
+Since the second and the third terms are constant w.r.t. $q_j$, $\elbo[q_j]$ is maximized when $q_j = q^*_j$.
+\item We can also use Calculus of Variations to derive the CAVI update.
+\item See \url{http://www2.imm.dtu.dk/pubdb/edoc/imm3314.pdf} for an example.
+\end{itemize}
+
+\section{Expectation Maximization (EM)}
+
+\begin{itemize}
+\item Let $\bm{x}$ be a set of observed variables and $\bm{y}$ be a set of latent variables with joint density
+\begin{align*}
+p(\bm{y},\bm{x} \mid \bm{\theta})
+\end{align*}
+where $\bm{\theta}$ is the set of parameters of $p$.
+\end{itemize}
+
+\subsection{EM for MLE}
+
+\begin{itemize}
+\item The goal of MLE is to solve
+\begin{align*}
+\argmax_{\bm{\theta}} \log p(\bm{x} \mid \bm{\theta}).
+\end{align*}
+\item Since
+\begin{align*}
+\log p(\bm{x} \mid \bm{\theta}) = \log \int p(\bm{y}, \bm{x} \mid \bm{\theta}) \, d\bm{z},
+\end{align*}
+the integral appears \textit{inside} the log. This can make optimization difficult.
+\item We recall that (c.f. Equation \eqref{eq:elbomax})
+\begin{align*}
+\log p(\bm{x} \mid \bm{\theta}) = \elbo[q,\bm{\theta}] + \KL(q(\bm{y}) \| p(\bm{y} \mid \bm{x}, \bm{\theta})) \geq \elbo[q,\bm{\theta}]
+\end{align*}
+where
+\begin{align*}
+\elbo[q,\bm{\theta}] = \EE_{q(\bm{y})} [ \log p(\bm{y},\bm{x} \mid \bm{\theta}) ] - \EE_{q(\bm{y})} [\log q(\bm{y})].
+\end{align*}
+Since
+\begin{align*}
+\EE_{q(\bm{y})} [ \log p(\bm{y},\bm{x} \mid \bm{\theta}) ] = \int q(\bm{y}) \log p(\bm{y},\bm{x} \mid \bm{\theta}) \, d\bm{z},
+\end{align*}
+the integral appears \textit{outside} the log so the maximization of the $\elbo$ w.r.t. $q$ or $\bm{\theta}$ can be easier.
+\item Motivated by this observation, we take a two-step approach.
+\begin{itemize}
+\item \textbf{E (expectation) step} : hold $\bm{\theta}$ constant and solve 
+\begin{align*}
+q^*(\bm{y}) = \argmax_{q(\bm{y})} \elbo[q,\bm{\theta}] = p(\bm{y} \mid \bm{x},\bm{\theta}).
+\end{align*}
+We then calculate the expectation
+\begin{align*}
+\EE_{q^*(\bm{y})} [ \log p(\bm{y},\bm{x} \mid \bm{\theta}) ] = \EE_{p(\bm{y} \mid \bm{x},\bm{\theta})} [ \log p(\bm{y},\bm{x} \mid \bm{\theta}) ]
+\end{align*}
+which is the only term in the $\elbo[q^*,\bm{\theta}]$ depending on $\bm{\theta}$.
+\item \textbf{M (maximization) step} : hold $q^*$ constant and solve
+\begin{align*}
+\bm{\theta}^* = \argmax_{\bm{\theta}} \elbo[q^*,\bm{\theta}] = \argmax_{\bm{\theta}} \EE_{p(\bm{y} \mid \bm{x},\bm{\theta})} [ \log p(\bm{y},\bm{x} \mid \bm{\theta}) ].
+\end{align*}
+\item Set $q$ and $\bm{\theta}$ as $q^*$ and $\bm{\theta}^*$ and repeat the above two steps.
+\end{itemize}
+\item In the E step, we tighten the lower bound, and in the M step, we choose $\bm{\theta}$ maximizing the lower bound.
+\item This indeed increases $\log p(\bm{x} \mid \bm{\theta})$ since
+\begin{align*}
+\log p(\bm{x} \mid \bm{\theta}) &= \elbo[q,\bm{\theta}] + \KL(q(\bm{y}) \| p(\bm{y} \mid \bm{x}, \bm{\theta})) \\
+&= \elbo[q^*,\bm{\theta}] \\
+&\leq \elbo[q^*,\bm{\theta}^*] \\
+&\leq \elbo[q^*,\bm{\theta}^*] + \KL(q^*(\bm{y}) \| p(\bm{y} \mid \bm{x}, \bm{\theta})) \\
+&= \log p(\bm{x} \mid \bm{\theta}^*).
+\end{align*}
+\end{itemize}
+
+\subsection{EM for MAP Estimation}
+
+\begin{itemize}
+\item We introduce a prior distribution for $\bm{\theta}$, denoted $\bm{\theta}$, such that
+\begin{align*}
+p(\bm{x},\bm{\theta}) = p(\bm{x} \mid \bm{\theta}) p(\bm{\theta}).
+\end{align*}
+\item The goal of MAP is to solve
+\begin{align*}
+\argmax_{\bm{\theta}} \log p(\bm{\theta} \mid \bm{x}) = \argmax_{\bm{\theta}} \log p(\bm{x}, \bm{\theta}).
+\end{align*}
+\item Replacing $\bm{x}$ by $(\bm{x},\bm{\theta})$ in Equation \eqref{eq:elbomax}, we see that
+\begin{align*}
+\log p(\bm{x},\bm{\theta}) = \lbo[q,\bm{\theta}] + \KL(q(\bm{y}) \| p(\bm{y} \mid \bm{x}, \bm{\theta})) \geq \lbo[q,\bm{\theta}]
+\end{align*}
+where
+\begin{align*}
+\lbo[q,\bm{\theta}] = \EE_{q(\bm{y})}[\log p(\bm{y}, \bm{x}, \bm{\theta})] - \EE_{q(\bm{y})}[\log q(\bm{y})].
+\end{align*}
+I will call the above term just \enquote{lower bound} not $\elbo$, since $p(\bm{x},\bm{\theta})$ is not evidence.
+\item We again take a two-step approach.
+\begin{itemize}
+\item \textbf{E (expectation) step} : hold $\bm{\theta}$ constant and solve 
+\begin{align*}
+q^*(\bm{y}) = \argmax_{q(\bm{y})} \lbo[q,\bm{\theta}] = p(\bm{y} \mid \bm{x},\bm{\theta}).
+\end{align*}
+We then calculate the expectation
+\begin{align*}
+\EE_{q^*(\bm{y})} [ \log p(\bm{y},\bm{x}, \bm{\theta}) ] = \EE_{p(\bm{y} \mid \bm{x},\theta)} [ \log p(\bm{y},\bm{x}, \bm{\theta}) ]
+\end{align*}
+which is the only term in the $\lbo[q^*,\bm{\theta}]$ depending on $\bm{\theta}$.
+\item \textbf{M (maximization) step} : hold $q^*$ constant and solve
+\begin{align*}
+\bm{\theta}^* = \argmax_{\bm{\theta}} \lbo[q^*,\bm{\theta}] = \argmax_{\bm{\theta}} \EE_{p(\bm{y} \mid \bm{x},\bm{\theta})} [ \log p(\bm{y},\bm{x}, \bm{\theta}) ].
+\end{align*}
+\item Set $q$ and $\bm{\theta}$ as $q^*$ and $\bm{\theta}^*$ and repeat the above two steps.
+\end{itemize}
+\item This indeed increases $\log p(\bm{x}, \bm{\theta})$ since
+\begin{align*}
+\log p(\bm{x}, \bm{\theta}) &= \lbo[q,\bm{\theta}] + \KL(q(\bm{y}) \| p(\bm{z} \mid \bm{x}, \bm{\theta})) \\
+&= \lbo[q^*,\bm{\theta}] \\
+&\leq \lbo[q^*,\bm{\theta}^*] \\
+&\leq \lbo[q^*,\bm{\theta}^*] + \KL(q^*(\bm{y}) \| p(\bm{y} \mid \bm{x}, \bm{\theta})) \\
+&= \log p(\bm{x}, \bm{\theta}^*).
+\end{align*}
+\end{itemize}
+
+\textbf{Remark.}
+\begin{itemize}
+\item EM maximizes the $\elbo$ exactly while variational inference maximizes the $\elbo$ approximately.
+\item EM which uses Monte Carlo approximation in the E step (in this case, E step of EM for MLE)
+\begin{align*}
+\EE_{p(\bm{y} \mid \bm{x},\bm{\theta})} [ \log p(\bm{y},\bm{x} \mid \bm{\theta}) ] \approx \frac{1}{L} \sum_{\ell = 1}^L \log p(\bm{y}^{(\ell)},\bm{x} \mid \bm{\theta})
+\end{align*}
+where $\bm{y}^{(\ell)}$ are samples from $p(\bm{y} \mid \bm{x},\bm{\theta})$ is called \textit{Monte Carlo EM}.
+\end{itemize}
+
+\textbf{Reference Material.}
+\begin{itemize}
+\item \textit{Pattern Recognition and Machine Learning} by Christopher M. Bishop.
+\end{itemize}
+
+\newpage
+
+\section{Variational EM}
+
+\begin{itemize}
+\item Let $\MM$ be a collection of model structures.
+\item Each model structure $m \in \MM$ has a set of parameters $\bm{\theta}$.
+\item Let $\bm{x}$ be a set of observed variables and $\bm{y}$ be a set of latent variables.
+\item For each model structure $m$, we then have the joint distribution
+\begin{align*}
+p(\bm{x}, \bm{y}, \bm{\theta} \mid m).
+\end{align*}
+\item Our goal is to calculate the evidence
+\begin{align*}
+\log p(\bm{x} \mid m) = \log \iint p(\bm{x}, \bm{y}, \bm{\theta} \mid m) \, d\bm{y} \, d\bm{\theta}.
+\end{align*}
+Then, we can either perform MLE w.r.t. $m$
+\begin{align*}
+\argmax_{m \in \MM} \log p(\bm{x} \mid m)
+\end{align*}
+or given a prior distribution over model structures $p(m)$, we can perform MAP w.r.t. $m$
+\begin{align*}
+\argmax_{m \in \MM} \log p(m \mid \bm{x}) = \argmax_{m \in \MM} \log p(\bm{x},m) = \argmax_{m \in \MM} \log p(\bm{x} \mid m) p(m).
+\end{align*}
+\item Recall that maximizing the $\elbo$ leads to approximating the log evidence (Section \ref{sec:elbo}).
+\item Hence, setting $z_1 = \bm{y}$ and $z_2 = \bm{\theta}$ such that $\bm{z} = (\bm{y},\bm{\theta})$, we may use CAVI (Section \ref{sec:cavi}).
+\item Specifically, define the mean-field variational distribution (c.f. Equation \eqref{eq:mf})
+\begin{align*}
+q(\bm{z}) = q(\bm{y},\bm{\theta}) = q_1(\bm{y}) q_2(\bm{\theta}).
+\end{align*}
+Equation \eqref{eq:cavi1} gives us the update rule
+\begin{align*}
+q_1^*(\bm{y}) &\propto \exp\left\{ \EE_{q_2(\bm{\theta})}[\log p(\bm{y} \mid \bm{\theta}, \bm{x}, m)] \right\}, \\
+q_2^*(\bm{\theta}) &\propto \exp\left\{ \EE_{q_1^*(\bm{y})}[\log p(\bm{\theta} \mid \bm{y}, \bm{x}, m)] \right\}.
+\end{align*}
+We then set $q_1(\bm{y})$ and $q_2(\bm{\theta})$ as $q_1^*(\bm{y})$ and $q_2^*(\bm{\theta})$ and repeat the above two steps.
+\item Somewhat like EM, variational EM alternates between a $q_1(\bm{y})$ update and a $q_2(\bm{\theta})$ update.
+\item This is why it is called variational \enquote{EM}.
+\end{itemize}
+
+\textbf{Reference Material.}
+\begin{itemize}
+\item Matthew J. Beal and Zoubin Ghahramani. \textit{The Variational Bayesian EM Algorithm for Incomplete Data: with Applications to Scoring Graphical Model Structures}. In \underline{Bayesian Statistics 7}, 2003.
+\end{itemize}
+
+\newpage
+
+\appendix
+
+\section{Calculus of Variations}
+
+\subsection{Preliminaries}
+
+\begin{itemize}
+\item A \textit{functional} is a scalar-valued function defined on the space of functions.
+\item Formally, a functional $\FF$, when given a function $u$, returns a scalar $\FF[u]$.
+\item The \textit{calculus of variations} is a field of mathematics that uses variations, which are small changes in functions and functionals, to find maxima and minima of functionals.
+\item We use the functional gradient, denoted $\nabla \FF[u]$, to find maxima or minima of functionals.
+\item We treat the functional gradient as a directional derivative
+\begin{align} \label{eq:grad}
+\langle \nabla \FF[u], v \rangle = \frac{d}{d\lambda} \FF[u + \lambda v] \bigg\rvert_{\lambda = 0}
+\end{align}
+where $\lambda \in \mathbb{R}$.
+\item The function $v$ representing the direction of the derivative is called the \textit{variation} of the function $u$.
+\item The inner product is the standard $L^2$ inner product for real functions
+\begin{align*}
+\langle f, g \rangle = \int f(x) g(x) \, dx.
+\end{align*}
+\end{itemize}
+
+\textbf{Proposition 1.} \textit{For a differentiable function $f$, if}
+\begin{align*}
+\FF[u] = \int f(u(x)) \, dx,
+\end{align*}
+\textit{then the functional gradient is given by}
+\begin{align*}
+\nabla \FF[u] = \frac{\partial}{\partial u} f(u) = f'(u).
+\end{align*}
+
+\begin{proof}
+Observe that
+\begin{align*}
+\frac{d}{d\lambda} \FF[u + \lambda v] &= \frac{d}{d\lambda} \int f(u(x) + \lambda v(x)) \, dx \\
+&= \int \frac{d}{d\lambda} f(u(x) + \lambda v(x)) \, dx \\
+&= \int f'(u(x) + \lambda v(x)) v(x) \, dx
+\end{align*}
+and so
+\begin{align*}
+\frac{d}{d\lambda} \FF[u + \lambda v] \bigg\rvert_{\lambda = 0} = \int f'(u(x)) v(x) \, dx = \langle f'(u), v \rangle.
+\end{align*}
+Since \eqref{eq:grad} must hold for any choice of $v$, we see that the claim is true.
+\end{proof}
+
+
+\textbf{Reference Materials.}
+\begin{itemize}
+\item \url{https://en.wikipedia.org/wiki/Calculus_of_variations}
+\item \url{https://www2.math.uconn.edu/~gordina/NelsonAaronHonorsThesis2012.pdf}
+\end{itemize}
+
+\newpage
+
+\subsection{Finding the Maximizer of $\elbo$} \label{append:varelbo}
+
+\begin{itemize}
+\item We solve the constrained optimization problem
+\begin{align*}
+\max_q \ \elbo[q] \quad \text{s.t.} \ \int q(\bm{z}) \, d\bm{z} = 1.
+\end{align*}
+\item To this end, we form the Lagrangian
+\begin{align*}
+L(q,\lambda) = \elbo[q] + \lambda \left( \int q(\bm{z}) \, d\bm{z} - 1 \right).
+\end{align*}
+\item The maximizer of $\elbo$ should satisfy the Lagrangian stationarity condition
+\begin{align*}
+\nabla L(q,\lambda) = 0.
+\end{align*}
+Using the definition of $\elbo$ and Proposition 1, we see that
+\begin{align*}
+\nabla L(q,\lambda) &= \nabla \left[ \elbo[q] + \lambda \left( \int q(\bm{z}) \, d\bm{z} - 1 \right) \right] \\
+&= \nabla \left[ \EE_{q(\bm{z})}[\log p(\bm{z},\bm{x})] - \EE_{q(\bm{z})}[\log q(\bm{z})] + \lambda \left( \int q(\bm{z}) \, d\bm{z} - 1 \right) \right] \\
+&= \nabla \left[ \int q(\bm{z}) \log p(\bm{z},\bm{x}) \, d\bm{z} - \int q(\bm{z}) \log q(\bm{z}) \, d\bm{z} + \lambda \left( \int q(\bm{z}) \, d\bm{z} - 1 \right) \right] \\
+&= \nabla \int q(\bm{z}) \log p(\bm{z},\bm{x}) \, d\bm{z} - \nabla \int q(\bm{z}) \log q(\bm{z}) \, d\bm{z} + \lambda \nabla \int q(\bm{z}) \, d\bm{z} \\
+&= \log p(\bm{z}, \bm{x}) - \log q(\bm{z}) - 1 + \lambda
+\end{align*}
+and so to satisfy the stationarity condition, we should have
+\begin{align*}
+q(\bm{z}) = p(\bm{z},\bm{x})e^{\lambda - 1}.
+\end{align*}
+\item Due to the optimization constraint,
+\begin{align*}
+1 = \int q(\bm{z}) \, d\bm{z} &= \int p(\bm{z},\bm{x})e^{\lambda - 1} \, d\bm{z} \\
+&= e^{\lambda - 1} \int p(\bm{z},\bm{x}) \, d\bm{z} \\
+&= e^{\lambda - 1} p(\bm{x})
+\end{align*}
+so we obtain
+\begin{align*}
+e^{\lambda - 1} = \frac{1}{p(\bm{x})}.
+\end{align*}
+\item It follows that
+\begin{align*}
+q(\bm{z}) = p(\bm{z},\bm{x})e^{\lambda - 1} = \frac{p(\bm{z},\bm{x})}{p(\bm{x})} = p(\bm{z} \mid \bm{x}).
+\end{align*}
+\end{itemize}
+
+\textbf{Reference Material.}
+\begin{itemize}
+\item \url{https://wiki.inf.ed.ac.uk/twiki/pub/MLforNLP/WebHome/bkj-VBwalkthrough.pdf}
+\end{itemize}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
