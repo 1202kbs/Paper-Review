@@ -1,13 +1,13 @@
-\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
-\BOOKMARK [1][-]{section.2}{Variational Inference}{}% 2
-\BOOKMARK [2][-]{subsection.2.1}{Approach 1: Evidence Lower Bound \(ELBO\)}{section.2}% 3
-\BOOKMARK [2][-]{subsection.2.2}{Approach 2: Posterior Approximation}{section.2}% 4
-\BOOKMARK [1][-]{section.3}{Mean-Field Variational Inference}{}% 5
-\BOOKMARK [2][-]{subsection.3.1}{Coordinate Ascent Mean-Field Variational Inference \(CAVI\)}{section.3}% 6
-\BOOKMARK [1][-]{section.4}{Expectation Maximization \(EM\)}{}% 7
-\BOOKMARK [2][-]{subsection.4.1}{EM for MLE}{section.4}% 8
-\BOOKMARK [2][-]{subsection.4.2}{EM for MAP Estimation}{section.4}% 9
-\BOOKMARK [1][-]{section.5}{Variational EM}{}% 10
-\BOOKMARK [1][-]{appendix.A}{Calculus of Variations}{}% 11
-\BOOKMARK [2][-]{subsection.A.1}{Preliminaries}{appendix.A}% 12
-\BOOKMARK [2][-]{subsection.A.2}{Finding the Maximizer of ELBO}{appendix.A}% 13
+\BOOKMARK [1][-]{section.1}{\376\377\000I\000n\000t\000r\000o\000d\000u\000c\000t\000i\000o\000n}{}% 1
+\BOOKMARK [1][-]{section.2}{\376\377\000V\000a\000r\000i\000a\000t\000i\000o\000n\000a\000l\000\040\000I\000n\000f\000e\000r\000e\000n\000c\000e}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{\376\377\000A\000p\000p\000r\000o\000a\000c\000h\000\040\0001\000:\000\040\000E\000v\000i\000d\000e\000n\000c\000e\000\040\000L\000o\000w\000e\000r\000\040\000B\000o\000u\000n\000d\000\040\000\050\000E\000L\000B\000O\000\051}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{\376\377\000A\000p\000p\000r\000o\000a\000c\000h\000\040\0002\000:\000\040\000P\000o\000s\000t\000e\000r\000i\000o\000r\000\040\000A\000p\000p\000r\000o\000x\000i\000m\000a\000t\000i\000o\000n}{section.2}% 4
+\BOOKMARK [1][-]{section.3}{\376\377\000M\000e\000a\000n\000-\000F\000i\000e\000l\000d\000\040\000V\000a\000r\000i\000a\000t\000i\000o\000n\000a\000l\000\040\000I\000n\000f\000e\000r\000e\000n\000c\000e}{}% 5
+\BOOKMARK [2][-]{subsection.3.1}{\376\377\000C\000o\000o\000r\000d\000i\000n\000a\000t\000e\000\040\000A\000s\000c\000e\000n\000t\000\040\000M\000e\000a\000n\000-\000F\000i\000e\000l\000d\000\040\000V\000a\000r\000i\000a\000t\000i\000o\000n\000a\000l\000\040\000I\000n\000f\000e\000r\000e\000n\000c\000e\000\040\000\050\000C\000A\000V\000I\000\051}{section.3}% 6
+\BOOKMARK [1][-]{section.4}{\376\377\000E\000x\000p\000e\000c\000t\000a\000t\000i\000o\000n\000\040\000M\000a\000x\000i\000m\000i\000z\000a\000t\000i\000o\000n\000\040\000\050\000E\000M\000\051}{}% 7
+\BOOKMARK [2][-]{subsection.4.1}{\376\377\000E\000M\000\040\000f\000o\000r\000\040\000M\000L\000E}{section.4}% 8
+\BOOKMARK [2][-]{subsection.4.2}{\376\377\000E\000M\000\040\000f\000o\000r\000\040\000M\000A\000P\000\040\000E\000s\000t\000i\000m\000a\000t\000i\000o\000n}{section.4}% 9
+\BOOKMARK [1][-]{section.5}{\376\377\000V\000a\000r\000i\000a\000t\000i\000o\000n\000a\000l\000\040\000E\000M}{}% 10
+\BOOKMARK [1][-]{appendix.A}{\376\377\000C\000a\000l\000c\000u\000l\000u\000s\000\040\000o\000f\000\040\000V\000a\000r\000i\000a\000t\000i\000o\000n\000s}{}% 11
+\BOOKMARK [2][-]{subsection.A.1}{\376\377\000P\000r\000e\000l\000i\000m\000i\000n\000a\000r\000i\000e\000s}{appendix.A}% 12
+\BOOKMARK [2][-]{subsection.A.2}{\376\377\000F\000i\000n\000d\000i\000n\000g\000\040\000t\000h\000e\000\040\000M\000a\000x\000i\000m\000i\000z\000e\000r\000\040\000o\000f\000\040\000E\000L\000B\000O}{appendix.A}% 13
